@@ -1,10 +1,14 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Category, Match, CategoryPlayer, HomeBanner
+from .models import Tournament, Category, Match, CategoryPlayer
 
 def home(request):
-    categories = Category.objects.all().order_by('name')
-    banner = HomeBanner.objects.filter(is_active=True).first()
-    return render(request, 'tournaments/home.html', {'categories': categories, 'banner': banner})
+    tournaments = Tournament.objects.filter(is_active=True).order_by('-id')
+    return render(request, 'tournaments/home.html', {'tournaments': tournaments})
+
+def tournament_detail(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    categories = Category.objects.filter(tournament=tournament).order_by('name')
+    return render(request, 'tournaments/tournament_detail.html', {'tournament': tournament, 'categories': categories})
 
 def category_detail(request, category_id):
     category = get_object_or_404(Category, id=category_id)

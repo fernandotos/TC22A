@@ -8,6 +8,9 @@
         <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ category.name }}</h1>
         <p style="color: var(--text-muted);">Classificação atualizada da barragem.</p>
     </div>
+    <div class="header-actions">
+        <a href="{% url 'tournaments:tournament_detail' category.tournament.id %}" class="back-link">&larr; Voltar para Barragem</a>
+    </div>
 </div>
 
 <div class="tabs">

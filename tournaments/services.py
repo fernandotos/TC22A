@@ -1,5 +1,5 @@
 import pandas as pd
-from .models import Category, Player, CategoryPlayer, Match
+from .models import Tournament, Category, Player, CategoryPlayer, Match
 
 def generate_round_robin_matches(category, players):
     """
@@ -41,7 +41,7 @@ def generate_round_robin_matches(category, players):
 
     Match.objects.bulk_create(matches_to_create)
 
-def process_excel_tournament(file):
+def process_excel_tournament(file, tournament):
     """
     Process an Excel file. Unified logic:
     If 'Confrontos' sheet exists and has data -> In Progress Tournament
@@ -64,7 +64,7 @@ def process_excel_tournament(file):
         if pd.isna(name) or name == 'nan' or pd.isna(cat_name) or cat_name == 'nan':
             continue
             
-        category, _ = Category.objects.get_or_create(name=cat_name)
+        category, _ = Category.objects.get_or_create(tournament=tournament, name=cat_name)
         player, _ = Player.objects.get_or_create(name=name)
         CategoryPlayer.objects.get_or_create(category=category, player=player)
         
@@ -89,11 +89,11 @@ def process_excel_tournament(file):
 
                 if pd.isna(cat_name) or cat_name == 'nan': continue
 
-                category = Category.objects.filter(name__iexact=cat_name).first()
+                category = Category.objects.filter(tournament=tournament, name__iexact=cat_name).first()
                 if not category:
-                    category = Category.objects.filter(name__iexact=f"Categoria {cat_name}").first()
+                    category = Category.objects.filter(tournament=tournament, name__iexact=f"Categoria {cat_name}").first()
                 if not category and len(cat_name) <= 3:
-                    category = Category.objects.filter(name__iendswith=f" {cat_name}").first()
+                    category = Category.objects.filter(tournament=tournament, name__iendswith=f" {cat_name}").first()
 
                 if not category:
                     messages_list.append(f"Linha {index+2}: Categoria não encontrada -> {cat_name}")

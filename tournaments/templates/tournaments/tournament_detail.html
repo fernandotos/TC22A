@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament.name }} - TC22A{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 class="home-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ tournament.name }}</h1>
+    <p class="home-subtitle" style="color: var(--text-muted);">Acompanhe os resultados e o ranking desta barragem.</p>
+</div>
+
+{% if tournament.start_date and tournament.end_date %}
+<div class="card banner-card"
+    style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; margin-bottom: 2.5rem; border: none; text-align: center; padding: 2rem;">
+    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">Rodada Atual: {{ tournament.current_round }}</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 1.5rem; color: #cbd5e1;">
+        <strong>De:</strong> {{ tournament.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{ tournament.end_date|date:"d/m/Y" }}
+    </p>
+    <div
+        style="background-color: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+        🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾
+    </div>
+</div>
+{% endif %}
+
+<h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Categorias</h2>
+<div class="card-grid" style="margin-top: 0;">
+    {% for category in categories %}
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="card">
+        <h3>{{ category.name }}</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
+            Ver jogos e ranking &rarr;
+        </p>
+    </a>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">Nenhuma categoria cadastrada.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

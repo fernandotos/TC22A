@@ -4,26 +4,17 @@
 <h1 class="home-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Bem-vindo à Barragem de Tenis do Clube 22 de Agosto</h1>
 <p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe os resultados, jogos e o ranking do TC22A.</p>
 
-{% if banner %}
-<div class="card banner-card"
-    style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; margin-bottom: 2.5rem; border: none; text-align: center; padding: 2rem;">
-    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">Rodada Atual: {{ banner.current_round }}</h2>
-    <p style="font-size: 1.1rem; margin-bottom: 1.5rem; color: #cbd5e1;">
-        <strong>De:</strong> {{ banner.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{ banner.end_date|date:"d/m/Y" }}
-    </p>
-    <div
-        style="background-color: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
-        🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾
-    </div>
-</div>
-{% endif %}
-
 <div class="card-grid">
-    {% for category in categories %}
-    <a href="{% url 'tournaments:category_detail' category.id %}" class="card">
-        <h3>{{ category.name }}</h3>
+    {% for tournament in tournaments %}
+    <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="card">
+        <h3>{{ tournament.name }}</h3>
+        {% if tournament.start_date and tournament.end_date %}
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+            {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
+        </p>
+        {% endif %}
         <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
-            Ver jogos e ranking &rarr;
+            Ver barragem &rarr;
         </p>
     </a>
     {% empty %}

@@ -2,13 +2,31 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Nome da Categoria")
-
+class Tournament(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Nome da Barragem")
+    current_round = models.IntegerField(verbose_name="Rodada Atual", default=1)
+    start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
+    end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
+    is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
+    
     def __str__(self):
         return self.name
+        
+    class Meta:
+        verbose_name = "Barragem"
+        verbose_name_plural = "Barragens"
+
+class Category(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
+    name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
+
+    def __str__(self):
+        if self.tournament:
+            return f"{self.tournament.name} - {self.name}"
+        return f"S/ Barragem - {self.name}"
 
     class Meta:
+        unique_together = ('tournament', 'name')
         verbose_name = "Categoria"
         verbose_name_plural = "Categorias"
 
@@ -151,15 +169,4 @@ def update_rankings(sender, instance, created, **kwargs):
         match.save(update_fields=['winner'])
         post_save.connect(update_rankings, sender=Match)
 
-class HomeBanner(models.Model):
-    current_round = models.IntegerField(verbose_name="Rodada Atual")
-    start_date = models.DateField(verbose_name="Data de Início")
-    end_date = models.DateField(verbose_name="Data de Fim")
-    is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
-    
-    def __str__(self):
-        return f"Banner - Rodada {self.current_round}"
-        
-    class Meta:
-        verbose_name = "Banner da Home"
-        verbose_name_plural = "Banners da Home"
+
