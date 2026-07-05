@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - TC22A{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ category.name }}</h1>
+        <p style="color: var(--text-muted);">Acompanhe os resultados desta barragem.</p>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="tab active">Jogos</a>
+    <a href="{% url 'tournaments:category_ranking' category.id %}" class="tab">Ranking Oficial</a>
+</div>
+
+{% if rounds %}
+<div class="filter-section" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+    <label for="round-filter" style="font-weight: 600; color: var(--text-color);">Filtrar por Rodada:</label>
+    <select id="round-filter" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; min-width: 200px;">
+        <option value="all" style="color: #000; background-color: #fff;">Todas as Rodadas</option>
+        {% for round_num in rounds.keys %}
+            <option value="{{ round_num }}" style="color: #000; background-color: #fff;">Rodada {{ round_num }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
+
+{% for round_num, matches in rounds.items %}
+<div class="round-block" data-round="{{ round_num }}">
+    <h2 class="round-title">Rodada {{ round_num }}</h2>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Atleta A</th>
+                    <th>Placar</th>
+                    <th>Atleta B</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                <tr>
+                    <td style="{% if match.winner == match.player_a %}font-weight: 600; color: var(--success);{% endif %}">
+                        {% if match.player_a %}{{ match.player_a.name }}{% else %}Bye (Folga){% endif %}
+                    </td>
+                    <td style="font-weight: 600; letter-spacing: 2px;">
+                        {% if match.status == 'completed' %}
+                            {{ match.sets_a }} x {{ match.sets_b }}
+                        {% elif match.status == 'cancelled' %}
+                            N/O
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="{% if match.winner == match.player_b %}font-weight: 600; color: var(--success);{% endif %}">
+                        {% if match.player_b %}{{ match.player_b.name }}{% else %}Bye (Folga){% endif %}
+                    </td>
+                    <td>
+                        {% if match.status == 'completed' %}
+                            <span class="badge badge-completed">Finalizado</span>
+                        {% elif match.status == 'cancelled' %}
+                            <span class="badge badge-cancelled">Cancelado</span>
+                        {% else %}
+                            <span class="badge badge-pending">Pendente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">Nenhum jogo cadastrado para esta categoria.</p>
+    </div>
+{% endfor %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterSelect = document.getElementById('round-filter');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', function() {
+                const selectedRound = this.value;
+                const roundBlocks = document.querySelectorAll('.round-block');
+                
+                roundBlocks.forEach(block => {
+                    if (selectedRound === 'all' || block.getAttribute('data-round') === selectedRound) {
+                        block.style.display = 'block';
+                    } else {
+                        block.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Ranking {{ category.name }} - TC22A{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ category.name }}</h1>
+        <p style="color: var(--text-muted);">Classificação atualizada da barragem.</p>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="tab">Jogos</a>
+    <a href="{% url 'tournaments:category_ranking' category.id %}" class="tab active">Ranking Oficial</a>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px; text-align: center;">Pos</th>
+                <th>Atleta</th>
+                <th style="text-align: center;">Pts</th>
+                <th style="text-align: center;">J</th>
+                <th style="text-align: center;">V</th>
+                <th style="text-align: center;">D</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cp in players %}
+            <tr>
+                <td style="text-align: center; font-weight: 800; color: {% if forloop.counter <= 3 %}var(--primary){% else %}var(--text-muted){% endif %};">
+                    {{ forloop.counter }}º
+                </td>
+                <td style="font-weight: 600;">
+                    {{ cp.player.name }}
+                </td>
+                <td style="text-align: center; font-weight: 800; color: var(--success); font-size: 1.1rem;">
+                    {{ cp.points }}
+                </td>
+                <td style="text-align: center; color: var(--text-muted);">
+                    {{ cp.matches_played }}
+                </td>
+                <td style="text-align: center; color: var(--text-main);">
+                    {{ cp.wins }}
+                </td>
+                <td style="text-align: center; color: var(--text-main);">
+                    {{ cp.losses }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                    Nenhum jogador classificado nesta categoria.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3 style="font-size: 1rem; margin-bottom: 1rem;">Regras de Pontuação</h3>
+    <ul style="color: var(--text-muted); font-size: 0.875rem; margin-left: 1.5rem;">
+        <li><strong>Vitória por 2x0:</strong> Vencedor recebe 3 pontos.</li>
+        <li><strong>Vitória por 2x1:</strong> Vencedor recebe 2 pontos, perdedor recebe 1 ponto.</li>
+        <li><strong>Jogo Cancelado:</strong> Contabilizado como jogo, mas 0 pontos para ambos.</li>
+        <li><strong>Critérios de Desempate:</strong> Pontos > Vitórias > Jogos Disputados.</li>
+    </ul>
+</div>
+{% endblock %}
