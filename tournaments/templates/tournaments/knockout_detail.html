@@ -9,6 +9,7 @@
         overflow-x: auto;
         padding: 2rem 0;
         gap: 3rem;
+        align-items: stretch;
         /* Custom scrollbar for webkit */
         scrollbar-width: thin;
         scrollbar-color: var(--primary-color) var(--bg-card);
@@ -29,9 +30,13 @@
     .round {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         min-width: 280px;
-        gap: 1.5rem;
+    }
+    
+    .matches-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
     }
 
     .round-header {
@@ -63,15 +68,51 @@
         box-shadow: 0 6px 16px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
     }
 
-    /* Simple right-connector for non-final rounds */
-    .round:not(:last-child) .matchup::after {
+    .matchup-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        padding: 0.75rem 0;
+        gap: 0.3rem;
+    }
+
+    /* Conectores da árvore do chaveamento */
+    .round:not(:last-child) .matchup-wrapper:nth-child(odd)::after {
         content: '';
         position: absolute;
-        right: -1.5rem;
         top: 50%;
+        right: -1.5rem;
         width: 1.5rem;
-        border-bottom: 2px solid var(--primary-color);
-        opacity: 0.5;
+        height: 50%;
+        border-top: 2px solid rgba(255, 255, 255, 0.4);
+        border-right: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-right-radius: 4px;
+        z-index: 10;
+    }
+
+    .round:not(:last-child) .matchup-wrapper:nth-child(even)::after {
+        content: '';
+        position: absolute;
+        bottom: 50%;
+        right: -1.5rem;
+        width: 1.5rem;
+        height: 50%;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+        border-right: 2px solid rgba(255, 255, 255, 0.4);
+        border-bottom-right-radius: 4px;
+        z-index: 10;
+    }
+
+    .round:not(:first-child) .matchup-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -1.5rem;
+        width: 1.5rem;
+        border-top: 2px solid rgba(255, 255, 255, 0.4);
+        z-index: 10;
     }
 
     .team {
@@ -178,8 +219,9 @@
             <div class="round">
                 <div class="round-header">{{ matches.0.phase }}</div>
                 
+                <div class="matches-container">
                 {% for match in matches %}
-                <div class="matchup-wrapper" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <div class="matchup-wrapper">
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase;">Jogo {{ match.match_number }}</div>
                     <div class="matchup">
                     <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
@@ -214,6 +256,7 @@
                 </div>
                 </div>
                 {% endfor %}
+                </div>
                 
             </div>
             {% endfor %}
