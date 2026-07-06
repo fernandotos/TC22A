@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="home-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Bem-vindo à Barragem de Tenis do Clube 22 de Agosto</h1>
-<p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe os resultados, jogos e o ranking do TC22A.</p>
+<h1 class="home-title" style="font-size: 2.3rem; margin-bottom: 0.5rem;">Bem-vindo ao Ranking interno de Tenis do Clube
+    22 de Agosto</h1>
+<p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe os resultados e o ranking do
+    TC22A.</p>
 
 <div class="card-grid">
     {% for tournament in tournaments %}
@@ -14,12 +16,12 @@
         </p>
         {% endif %}
         <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
-            Ver barragem &rarr;
+            Ver Ranking &rarr;
         </p>
     </a>
     {% empty %}
     <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <p style="color: var(--text-muted);">Nenhuma barragem ativa no momento.</p>
+        <p style="color: var(--text-muted);">Nenhum Ranking ativo no momento.</p>
     </div>
     {% endfor %}
 </div>

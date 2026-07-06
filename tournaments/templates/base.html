@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,33 +13,103 @@
     <style>
         /* Mobile Overrides (Bypass Cache Total) */
         @media (max-width: 768px) {
-            .container { padding: 0 1rem !important; }
-            .header-content { flex-direction: column !important; gap: 1rem !important; align-items: center !important; }
-            .header-nav { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; gap: 0.75rem !important; margin-top: 0.5rem !important; }
-            .nav-divider { display: none !important; }
-            .nav-link { font-size: 0.9rem !important; padding: 0.4rem 1rem !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; text-align: center !important; display: inline-block !important; }
-            .card-grid { grid-template-columns: 1fr !important; }
-            .home-title { font-size: 1.75rem !important; text-align: center !important; }
-            .home-subtitle { text-align: center !important; margin-bottom: 1.5rem !important; }
-            .banner-card { padding: 1.5rem !important; }
-            .banner-card h2 { font-size: 1.4rem !important; }
-            .banner-card p { font-size: 0.95rem !important; }
-            .banner-card div { font-size: 0.9rem !important; padding: 0.75rem !important; }
-            th, td { padding: 0.5rem 0.75rem !important; font-size: 0.8rem !important; }
-            .table-container { overflow-x: auto !important; }
-            .tabs { flex-wrap: wrap !important; gap: 0.5rem !important; }
-            .tab { flex: 1 !important; text-align: center !important; padding: 0.5rem !important; font-size: 0.9rem !important; }
+            .container {
+                padding: 0 1rem !important;
+            }
+
+            .header-content {
+                flex-direction: column !important;
+                gap: 1rem !important;
+                align-items: center !important;
+            }
+
+            .header-nav {
+                width: 100% !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 0.75rem !important;
+                margin-top: 0.5rem !important;
+            }
+
+            .nav-divider {
+                display: none !important;
+            }
+
+            .nav-link {
+                font-size: 0.9rem !important;
+                padding: 0.4rem 1rem !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                text-align: center !important;
+                display: inline-block !important;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .home-title {
+                font-size: 1.75rem !important;
+                text-align: center !important;
+            }
+
+            .home-subtitle {
+                text-align: center !important;
+                margin-bottom: 1.5rem !important;
+            }
+
+            .banner-card {
+                padding: 1.5rem !important;
+            }
+
+            .banner-card h2 {
+                font-size: 1.4rem !important;
+            }
+
+            .banner-card p {
+                font-size: 0.95rem !important;
+            }
+
+            .banner-card div {
+                font-size: 0.9rem !important;
+                padding: 0.75rem !important;
+            }
+
+            th,
+            td {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.8rem !important;
+            }
+
+            .table-container {
+                overflow-x: auto !important;
+            }
+
+            .tabs {
+                flex-wrap: wrap !important;
+                gap: 0.5rem !important;
+            }
+
+            .tab {
+                flex: 1 !important;
+                text-align: center !important;
+                padding: 0.5rem !important;
+                font-size: 0.9rem !important;
+            }
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="container header-content">
-            <a href="{% url 'tournaments:home' %}" class="logo">TC22A<span>.</span>Barragem</a>
+            <a href="{% url 'tournaments:home' %}" class="logo">TC22A<span>.</span>Ranking</a>
             <nav class="header-nav">
-                <a href="{% url 'tournaments:home' %}" class="nav-link">Torneios</a>
+                <a href="{% url 'tournaments:home' %}" class="nav-link">Ranking</a>
                 <span class="nav-divider">|</span>
-                <a href="{% static 'Regulamento_Ranking_Interno_Tenis.pdf' %}" target="_blank" rel="noopener noreferrer" class="nav-link">Regulamento</a>
+                <a href="{% static 'Regulamento_Ranking_Interno_Tenis.pdf' %}" target="_blank" rel="noopener noreferrer"
+                    class="nav-link">Regulamento</a>
             </nav>
         </div>
     </header>
@@ -56,4 +127,5 @@
         </div>
     </footer>
 </body>
+
 </html>
