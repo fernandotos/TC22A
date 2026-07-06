@@ -6,31 +6,19 @@
     .bracket-container {
         display: flex;
         flex-direction: row;
-        overflow-x: auto;
-        padding: 2rem 0;
+        padding: 2rem;
         gap: 3rem;
         align-items: stretch;
-        /* Custom scrollbar for webkit */
-        scrollbar-width: thin;
-        scrollbar-color: var(--primary-color) var(--bg-card);
-    }
-    
-    .bracket-container::-webkit-scrollbar {
-        height: 8px;
-    }
-    .bracket-container::-webkit-scrollbar-track {
-        background: var(--bg-card);
-        border-radius: 4px;
-    }
-    .bracket-container::-webkit-scrollbar-thumb {
-        background-color: var(--primary-color);
-        border-radius: 4px;
     }
 
     .round {
         display: flex;
         flex-direction: column;
         min-width: 280px;
+    }
+    
+    .round:last-child {
+        margin-right: 2rem;
     }
     
     .matches-container {
@@ -79,7 +67,7 @@
     }
 
     /* Conectores da árvore do chaveamento */
-    .round:not(:last-child) .matchup-wrapper:nth-child(odd)::after {
+    .round:not(:last-child) div.matchup-wrapper:nth-of-type(odd)::after {
         content: '';
         position: absolute;
         top: 50%;
@@ -88,11 +76,11 @@
         height: 50%;
         border-top: 2px solid rgba(255, 255, 255, 0.4);
         border-right: 2px solid rgba(255, 255, 255, 0.4);
-        border-top-right-radius: 4px;
+        border-top-right-radius: 8px;
         z-index: 10;
     }
 
-    .round:not(:last-child) .matchup-wrapper:nth-child(even)::after {
+    .round:not(:last-child) div.matchup-wrapper:nth-of-type(even)::after {
         content: '';
         position: absolute;
         bottom: 50%;
@@ -101,11 +89,11 @@
         height: 50%;
         border-bottom: 2px solid rgba(255, 255, 255, 0.4);
         border-right: 2px solid rgba(255, 255, 255, 0.4);
-        border-bottom-right-radius: 4px;
+        border-bottom-right-radius: 8px;
         z-index: 10;
     }
 
-    .round:not(:first-child) .matchup-wrapper::before {
+    .round:not(:first-child) div.matchup-wrapper::before {
         content: '';
         position: absolute;
         top: 50%;
@@ -195,6 +183,25 @@
         padding: 0 1rem;
     }
 
+    /* Faz o fundo do site inteiro (body/header) esticar horizontalmente acompanhando a árvore */
+    body, html {
+        min-width: min-content;
+        min-width: -moz-min-content;
+        min-width: -webkit-min-content;
+    }
+    
+    header {
+        position: sticky;
+        left: 0;
+        width: 100vw;
+        z-index: 1000;
+    }
+    
+    footer {
+        position: sticky;
+        left: 0;
+        width: 100vw;
+    }
 </style>
 
 <div style="margin-bottom: 2rem;">
@@ -222,6 +229,11 @@
                 <div class="matches-container">
                 {% for match in matches %}
                 <div class="matchup-wrapper">
+                    {% if match.bracket_label %}
+                        <div style="text-align: left; color: var(--primary-color); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.3rem; margin-left: 0.5rem;">
+                            {{ match.bracket_label }}
+                        </div>
+                    {% endif %}
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase;">Jogo {{ match.match_number }}</div>
                     <div class="matchup">
                     <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
