@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .bracket-container {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 2rem 0;
+        gap: 3rem;
+        /* Custom scrollbar for webkit */
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) var(--bg-card);
+    }
+    
+    .bracket-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    .bracket-container::-webkit-scrollbar-track {
+        background: var(--bg-card);
+        border-radius: 4px;
+    }
+    .bracket-container::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 4px;
+    }
+
+    .round {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 280px;
+        gap: 1.5rem;
+    }
+
+    .round-header {
+        text-align: center;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
+        background: var(--bg-card);
+        padding: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .matchup {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .matchup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
+    }
+
+    /* Simple right-connector for non-final rounds */
+    .round:not(:last-child) .matchup::after {
+        content: '';
+        position: absolute;
+        right: -1.5rem;
+        top: 50%;
+        width: 1.5rem;
+        border-bottom: 2px solid var(--primary-color);
+        opacity: 0.5;
+    }
+
+    .team {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        position: relative;
+    }
+
+    .team:first-child {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .team:first-child {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    }
+
+    .team.winner {
+        font-weight: bold;
+        background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.05);
+    }
+    
+    .team.winner .team-name {
+        color: var(--success, #10b981);
+    }
+
+    .team.winner::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--success, #10b981);
+    }
+
+    .team-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        padding-right: 1rem;
+    }
+
+    .team-score {
+        font-family: 'Inter', monospace;
+        display: flex;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .team-score span {
+        width: 1.5rem;
+        text-align: center;
+    }
+
+    .match-status {
+        font-size: 0.7rem;
+        text-align: center;
+        padding: 0.25rem;
+        background: rgba(0,0,0,0.03);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .match-status {
+            background: rgba(255,255,255,0.03);
+        }
+    }
+
+    /* Ajuste para usar o máximo da tela e não cortar as chaves finais */
+    .container {
+        max-width: 98% !important;
+        padding: 0 1rem;
+    }
+
+</style>
+
+<div style="margin-bottom: 2rem;">
+    <a href="{% url 'tournaments:knockout_list' %}" class="back-link">&larr; Voltar para Torneios</a>
+    <h1 class="home-title" style="margin-top: 1rem;">{{ tournament.name }}</h1>
+    <p class="home-subtitle" style="color: var(--text-muted);">
+        Chave Eliminatória &bull; {{ tournament.get_competition_type_display }} &bull; {{ tournament.get_set_format_display }}
+    </p>
+</div>
+
+{% if not brackets %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <p style="color: var(--text-muted);">A chave deste torneio ainda não foi gerada.</p>
+</div>
+{% else %}
+    {% for bracket in brackets %}
+        {% if brackets|length > 1 %}
+            <h2 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary-color); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
+        {% endif %}
+        <div class="bracket-container">
+            {% for round_num, matches in bracket.rounds.items %}
+            <div class="round">
+                <div class="round-header">{{ matches.0.phase }}</div>
+                
+                {% for match in matches %}
+                <div class="matchup-wrapper" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase;">Jogo {{ match.match_number }}</div>
+                    <div class="matchup">
+                    <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
+                        <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
+                        <span class="team-score">
+                            {% if match.set1_a != None %}<span>{{ match.set1_a }}</span>{% endif %}
+                            {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
+                            {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
+                            {% if match.set4_a != None %}<span>{{ match.set4_a }}</span>{% endif %}
+                            {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
+                        <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
+                        <span class="team-score">
+                            {% if match.set1_b != None %}<span>{{ match.set1_b }}</span>{% endif %}
+                            {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
+                            {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
+                            {% if match.set4_b != None %}<span>{{ match.set4_b }}</span>{% endif %}
+                            {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if match.status == 'pending' %}
+                    <div class="match-status">Aguardando</div>
+                    {% elif match.status == 'cancelled' %}
+                    <div class="match-status">Cancelado</div>
+                    {% else %}
+                    <div class="match-status">Finalizado</div>
+                    {% endif %}
+                </div>
+                </div>
+                {% endfor %}
+                
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

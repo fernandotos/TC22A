@@ -3,18 +3,49 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class Tournament(models.Model):
-    name = models.CharField(max_length=200, verbose_name="Nome do Ranking")
+    TOURNAMENT_TYPES = [
+        ('ranking', 'Ranking'),
+        ('knockout', 'Torneio Eliminatório'),
+    ]
+    COMPETITION_TYPES = [
+        ('simples', 'Simples'),
+        ('duplas', 'Duplas'),
+    ]
+    SET_FORMATS = [
+        ('3_normal', 'Melhor de 3 Sets Normal'),
+        ('3_super', 'Melhor de 3 Sets (3º Set é Super Tiebreak)'),
+        ('5_normal', 'Melhor de 5 Sets Normal'),
+    ]
+
+    name = models.CharField(max_length=200, verbose_name="Nome do Torneio/Ranking")
+    tournament_type = models.CharField(max_length=20, choices=TOURNAMENT_TYPES, default='ranking', verbose_name="Tipo")
+    competition_type = models.CharField(max_length=20, choices=COMPETITION_TYPES, default='simples', verbose_name="Competição")
+    set_format = models.CharField(max_length=20, choices=SET_FORMATS, default='3_normal', verbose_name="Formato de Sets")
+    
     current_round = models.IntegerField(verbose_name="Rodada Atual", default=1)
     start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
     end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
+    number_of_brackets = models.IntegerField(default=1, verbose_name="Número de Chaves (Eliminatório)", help_text="Apenas para Torneios Eliminatórios: O número de chaves paralelas (ex: 2 para dividir 32 atletas em 2 chaves de 16).")
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     
     def __str__(self):
         return self.name
         
     class Meta:
+        verbose_name = "Torneio/Ranking Base"
+        verbose_name_plural = "Torneios/Rankings Base"
+
+class RankingTournament(Tournament):
+    class Meta:
+        proxy = True
         verbose_name = "Ranking"
         verbose_name_plural = "Rankings"
+
+class KnockoutTournament(Tournament):
+    class Meta:
+        proxy = True
+        verbose_name = "Torneio Eliminatório"
+        verbose_name_plural = "Torneios Eliminatórios"
 
 class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
@@ -64,14 +95,33 @@ class Match(models.Model):
         ('cancelled', 'Não Ocorreu (Cancelado)'),
     ]
 
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='matches')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='matches', null=True, blank=True)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='all_matches', null=True, blank=True)
     round_number = models.IntegerField(verbose_name="Rodada")
     player_a = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_a', null=True, blank=True)
     player_b = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_b', null=True, blank=True)
     
     # Results
-    sets_a = models.IntegerField(default=0, verbose_name="Sets Atleta A")
-    sets_b = models.IntegerField(default=0, verbose_name="Sets Atleta B")
+    # General Results
+    sets_a = models.IntegerField(default=0, verbose_name="Sets Ganhos (A)")
+    sets_b = models.IntegerField(default=0, verbose_name="Sets Ganhos (B)")
+    
+    # Games per Set
+    set1_a = models.IntegerField(null=True, blank=True, verbose_name="Set 1 - A")
+    set1_b = models.IntegerField(null=True, blank=True, verbose_name="Set 1 - B")
+    set2_a = models.IntegerField(null=True, blank=True, verbose_name="Set 2 - A")
+    set2_b = models.IntegerField(null=True, blank=True, verbose_name="Set 2 - B")
+    set3_a = models.IntegerField(null=True, blank=True, verbose_name="Set 3 - A")
+    set3_b = models.IntegerField(null=True, blank=True, verbose_name="Set 3 - B")
+    set4_a = models.IntegerField(null=True, blank=True, verbose_name="Set 4 - A")
+    set4_b = models.IntegerField(null=True, blank=True, verbose_name="Set 4 - B")
+    set5_a = models.IntegerField(null=True, blank=True, verbose_name="Set 5 - A")
+    set5_b = models.IntegerField(null=True, blank=True, verbose_name="Set 5 - B")
+    
+    # Knockout specific
+    next_match = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_matches')
+    phase = models.CharField(max_length=50, blank=True, verbose_name="Fase")
+    position_in_bracket = models.IntegerField(null=True, blank=True)
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
@@ -92,6 +142,53 @@ class Match(models.Model):
 # Signal to calculate points when a match is saved
 @receiver(post_save, sender=Match)
 def update_rankings(sender, instance, created, **kwargs):
+    # Sempre calcula o vencedor e sets automaticamente se finalizado
+    if instance.status == 'completed':
+        # Calcula sets ganhos baseado nos games caso o ADM tenha esquecido de preencher
+        if instance.sets_a == 0 and instance.sets_b == 0:
+            calc_a, calc_b = 0, 0
+            for i in range(1, 6):
+                sa = getattr(instance, f'set{i}_a')
+                sb = getattr(instance, f'set{i}_b')
+                if sa is not None and sb is not None:
+                    if sa > sb: calc_a += 1
+                    elif sb > sa: calc_b += 1
+            if calc_a > 0 or calc_b > 0:
+                instance.sets_a = calc_a
+                instance.sets_b = calc_b
+                
+        calculated_winner = None
+        if instance.sets_a > instance.sets_b:
+            calculated_winner = instance.player_a
+        elif instance.sets_b > instance.sets_a:
+            calculated_winner = instance.player_b
+            
+        if instance.winner != calculated_winner or (instance.sets_a > 0 or instance.sets_b > 0):
+            post_save.disconnect(update_rankings, sender=Match)
+            instance.winner = calculated_winner
+            instance.save(update_fields=['winner', 'sets_a', 'sets_b'])
+            post_save.connect(update_rankings, sender=Match)
+    elif instance.status == 'pending' and instance.winner is not None:
+        post_save.disconnect(update_rankings, sender=Match)
+        instance.winner = None
+        instance.save(update_fields=['winner'])
+        post_save.connect(update_rankings, sender=Match)
+
+    # Se for jogo de Torneio Eliminatório, não calcula pontuação de Ranking
+    if instance.tournament and instance.tournament.tournament_type == 'knockout':
+        if instance.next_match:
+            nm = instance.next_match
+            # Avança o vencedor se estiver finalizado, senão limpa a vaga
+            if instance.position_in_bracket % 2 != 0:
+                nm.player_a = instance.winner if instance.status == 'completed' else None
+            else:
+                nm.player_b = instance.winner if instance.status == 'completed' else None
+            nm.save()
+        return
+
+    if not instance.category:
+        return
+        
     # Recalculate everything for this category to ensure consistency
     category = instance.category
     
