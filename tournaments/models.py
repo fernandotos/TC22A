@@ -27,6 +27,7 @@ class Tournament(models.Model):
     end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
     number_of_brackets = models.IntegerField(default=1, verbose_name="Número de Chaves (Eliminatório)", help_text="Apenas para Torneios Eliminatórios: O número de chaves paralelas (ex: 2 para dividir 32 atletas em 2 chaves de 16).")
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
+    is_finished = models.BooleanField(default=False, verbose_name="Encerrado", help_text="Marque esta opção quando o torneio/ranking chegar ao fim.")
     
     def __str__(self):
         return self.name

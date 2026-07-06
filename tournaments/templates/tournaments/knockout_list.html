@@ -8,8 +8,13 @@
 
 <div class="card-grid">
     {% for tournament in tournaments %}
-    <a href="{% url 'tournaments:knockout_detail' tournament.id %}" class="card">
-        <h3>{{ tournament.name }}</h3>
+    <a href="{% url 'tournaments:knockout_detail' tournament.id %}" class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
+        {% if tournament.is_finished %}
+        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Encerrado</span>
+        {% else %}
+        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Em andamento</span>
+        {% endif %}
+        <h3 style="margin-top: 0;">{{ tournament.name }}</h3>
         {% if tournament.start_date and tournament.end_date %}
         <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
             {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
