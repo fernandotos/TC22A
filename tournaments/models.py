@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class Tournament(models.Model):
-    name = models.CharField(max_length=200, verbose_name="Nome da Barragem")
+    name = models.CharField(max_length=200, verbose_name="Nome do Ranking")
     current_round = models.IntegerField(verbose_name="Rodada Atual", default=1)
     start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
     end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
@@ -13,8 +13,8 @@ class Tournament(models.Model):
         return self.name
         
     class Meta:
-        verbose_name = "Barragem"
-        verbose_name_plural = "Barragens"
+        verbose_name = "Ranking"
+        verbose_name_plural = "Rankings"
 
 class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
@@ -23,7 +23,7 @@ class Category(models.Model):
     def __str__(self):
         if self.tournament:
             return f"{self.tournament.name} - {self.name}"
-        return f"S/ Barragem - {self.name}"
+        return f"S/ Ranking - {self.name}"
 
     class Meta:
         unique_together = ('tournament', 'name')

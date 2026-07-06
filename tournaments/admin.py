@@ -35,7 +35,7 @@ class TournamentAdminForm(forms.ModelForm):
     excel_file = forms.FileField(
         required=False, 
         label="Planilha Excel (Opcional)", 
-        help_text=mark_safe("Envie a planilha para popular esta barragem ao salvar. <a href='/admin/tournaments/tournament/download-template/' target='_blank'>Baixar Modelo</a>")
+        help_text=mark_safe("Envie a planilha para popular este Ranking ao salvar. <a href='/admin/tournaments/tournament/download-template/' target='_blank'>Baixar Modelo</a>")
     )
 
     class Meta:
@@ -82,7 +82,7 @@ class TournamentAdmin(admin.ModelAdmin):
             output.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename="template_barragem.xlsx"'
+        response['Content-Disposition'] = 'attachment; filename="template_ranking.xlsx"'
         return response
 
 @admin.register(Match)

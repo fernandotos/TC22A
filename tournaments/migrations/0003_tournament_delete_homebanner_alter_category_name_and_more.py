@@ -15,15 +15,15 @@ class Migration(migrations.Migration):
             name='Tournament',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Nome da Barragem')),
+                ('name', models.CharField(max_length=200, verbose_name='Nome do Ranking')),
                 ('current_round', models.IntegerField(default=1, verbose_name='Rodada Atual')),
                 ('start_date', models.DateField(blank=True, null=True, verbose_name='Data de Início')),
                 ('end_date', models.DateField(blank=True, null=True, verbose_name='Data de Fim')),
                 ('is_active', models.BooleanField(default=True, verbose_name='Ativo (Exibir no site)')),
             ],
             options={
-                'verbose_name': 'Barragem',
-                'verbose_name_plural': 'Barragens',
+                'verbose_name': 'Ranking',
+                'verbose_name_plural': 'Rankings',
             },
         ),
         migrations.DeleteModel(

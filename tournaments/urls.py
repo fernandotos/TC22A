@@ -5,7 +5,7 @@ app_name = 'tournaments'
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('barragem/<int:tournament_id>/', views.tournament_detail, name='tournament_detail'),
+    path('ranking/<int:tournament_id>/', views.tournament_detail, name='tournament_detail'),
     path('categoria/<int:category_id>/', views.category_detail, name='category_detail'),
     path('categoria/<int:category_id>/ranking/', views.category_ranking, name='category_ranking'),
 ]

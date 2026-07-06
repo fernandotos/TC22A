@@ -5,7 +5,7 @@
     <form action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <fieldset class="module aligned">
-            <h2>Upload de Planilha da Barragem</h2>
+            <h2>Upload de Planilha do Ranking</h2>
 
             <div class="form-row">
                 <div>
@@ -16,14 +16,16 @@
                     <p>O sistema processará o arquivo automaticamente:</p>
                     <ul style="list-style-type: disc; padding-left: 20px;">
                         <li><strong>Aba "Cadastro"</strong>: Obrigatória. Lida para criar categorias e atletas.</li>
-                        <li><strong>Aba "Confrontos"</strong>: Opcional. Se estiver preenchida, o sistema entenderá como uma barragem <strong>em andamento</strong> e lerá os resultados.</li>
-                        <li>Se não houver aba "Confrontos" (ou ela estiver vazia), o sistema entenderá como uma barragem <strong>nova</strong> e gerará automaticamente os jogos de todos contra todos.</li>
+                        <li><strong>Aba "Confrontos"</strong>: Opcional. Se estiver preenchida, o sistema entenderá como
+                            um Ranking <strong>em andamento</strong> e lerá os resultados.</li>
+                        <li>Se não houver aba "Confrontos" (ou ela estiver vazia), o sistema entenderá como um Ranking
+                            <strong>novo</strong> e gerará automaticamente os jogos de todos contra todos.</li>
                     </ul>
                 </div>
             </div>
 
         </fieldset>
-        
+
         <div class="submit-row">
             <input type="submit" value="Enviar Excel e Processar" class="default" name="_save">
         </div>

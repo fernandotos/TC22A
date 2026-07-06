@@ -5,15 +5,17 @@
 {% block content %}
 <div style="margin-bottom: 2rem;">
     <h1 class="home-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ tournament.name }}</h1>
-    <p class="home-subtitle" style="color: var(--text-muted);">Acompanhe os resultados e o ranking desta barragem.</p>
+    <p class="home-subtitle" style="color: var(--text-muted);">Acompanhe os resultados e o ranking interno.</p>
 </div>
 
 {% if tournament.start_date and tournament.end_date %}
 <div class="card banner-card"
     style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; margin-bottom: 2.5rem; border: none; text-align: center; padding: 2rem;">
-    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">Rodada Atual: {{ tournament.current_round }}</h2>
+    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">Rodada Atual: {{ tournament.current_round }}
+    </h2>
     <p style="font-size: 1.1rem; margin-bottom: 1.5rem; color: #cbd5e1;">
-        <strong>De:</strong> {{ tournament.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{ tournament.end_date|date:"d/m/Y" }}
+        <strong>De:</strong> {{ tournament.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{
+        tournament.end_date|date:"d/m/Y" }}
     </p>
     <div
         style="background-color: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.2);">

@@ -185,6 +185,6 @@ def process_excel_tournament(file, tournament):
         for category, players in category_players_map.items():
             Match.objects.filter(category=category).delete()
             generate_round_robin_matches(category, players)
-        return True, "Nova Barragem gerada com sucesso! Todos contra todos criados.", messages_list
+        return True, "Novo Ranking gerado com sucesso! Todos contra todos criados.", messages_list
     
-    return True, f"Barragem em andamento atualizada: {matches_created} jogos criados, {matches_updated} atualizados.", messages_list
+    return True, f"Ranking em andamento atualizado: {matches_created} jogos criados, {matches_updated} atualizados.", messages_list
