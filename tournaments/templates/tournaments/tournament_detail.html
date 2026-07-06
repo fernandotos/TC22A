@@ -8,7 +8,31 @@
     <p class="home-subtitle" style="color: var(--text-muted);">Acompanhe os resultados e o ranking interno.</p>
 </div>
 
-{% if tournament.start_date and tournament.end_date %}
+{% if tournament.is_finished %}
+<div class="card banner-card"
+    style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; margin-bottom: 2.5rem; border: none; text-align: center; padding: 2rem;">
+    <h2 style="font-size: 1.75rem; margin-bottom: 1.5rem; color: #fff;">🏆 Ranking Encerrado 🏆</h2>
+    <div
+        style="background-color: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: left;">
+        <h3 style="margin-top: 0; margin-bottom: 1rem; color: #fff; text-align: center;">Resultados Finais</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
+            {% for category in categories %}
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; min-width: 200px;">
+                <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: #93c5fd; text-align: center;">{{ category.name }}</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem;">
+                    {% for cp in category.players.all|slice:":3" %}
+                    <li style="margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                        {% if forloop.counter == 1 %}<span style="font-size: 1.2rem;">🥇</span>{% elif forloop.counter == 2 %}<span style="font-size: 1.2rem;">🥈</span>{% elif forloop.counter == 3 %}<span style="font-size: 1.2rem;">🥉</span>{% endif %} 
+                        <span>{{ cp.player.name }} <small style="opacity: 0.7;">({{ cp.points }} pts)</small></span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% elif tournament.start_date and tournament.end_date %}
 <div class="card banner-card"
     style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; margin-bottom: 2.5rem; border: none; text-align: center; padding: 2rem;">
     <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">Rodada Atual: {{ tournament.current_round }}
