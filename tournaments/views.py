@@ -192,7 +192,7 @@ def tournament_schedule_pdf(request, tournament_id):
         return t
 
     def start_new_day(dt, elems):
-        d = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Vencedor']]
+        d = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
         dia_semana = DIAS_SEMANA[dt.weekday()]
         data_str = dt.strftime("%d/%m/%Y")
         
@@ -261,10 +261,19 @@ def tournament_schedule_pdf(request, tournament_id):
         
         resultado_str = ""
         if match.status == 'completed':
-            if match.winner:
-                resultado_str = match.winner.name
+            sets_scores = []
+            for i in range(1, 6):
+                sa = getattr(match, f'set{i}_a')
+                sb = getattr(match, f'set{i}_b')
+                if sa is not None and sb is not None:
+                    sets_scores.append(f"{sa}/{sb}")
+            
+            if sets_scores:
+                resultado_str = " ".join(sets_scores)
+            elif sets_a != "" and sets_b != "":
+                resultado_str = f"{sets_a} x {sets_b}"
             else:
-                resultado_str = "Encerrado"
+                resultado_str = "W.O." if match.winner else "Encerrado"
         
         data.append([time_str, f"{idx}", tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
         
