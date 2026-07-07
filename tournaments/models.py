@@ -208,6 +208,42 @@ def reset_match_if_pending(sender, instance, **kwargs):
             setattr(instance, f'set{i}_a', None)
             setattr(instance, f'set{i}_b', None)
 
+def check_and_update_tournament_status(tournament):
+    if not tournament:
+        return
+        
+    if tournament.tournament_type == 'knockout':
+        finals = Match.objects.filter(tournament=tournament, next_match__isnull=True)
+        if finals.exists():
+            all_completed = True
+            for f in finals:
+                if f.status not in ['completed', 'cancelled']:
+                    all_completed = False
+                    break
+            
+            if all_completed and not tournament.is_finished:
+                tournament.is_finished = True
+                tournament.save(update_fields=['is_finished'])
+            elif not all_completed and tournament.is_finished:
+                tournament.is_finished = False
+                tournament.save(update_fields=['is_finished'])
+                
+    elif tournament.tournament_type == 'ranking':
+        matches = Match.objects.filter(category__tournament=tournament)
+        if matches.exists():
+            all_completed = True
+            for m in matches:
+                if m.status not in ['completed', 'cancelled'] and not m.is_bye:
+                    all_completed = False
+                    break
+                    
+            if all_completed and not tournament.is_finished:
+                tournament.is_finished = True
+                tournament.save(update_fields=['is_finished'])
+            elif not all_completed and tournament.is_finished:
+                tournament.is_finished = False
+                tournament.save(update_fields=['is_finished'])
+
 # Signal to calculate points when a match is saved
 @receiver(post_save, sender=Match)
 def update_rankings(sender, instance, created, **kwargs):
@@ -271,6 +307,7 @@ def update_rankings(sender, instance, created, **kwargs):
             else:
                 nm.player_b = instance.winner if instance.status == 'completed' else None
             nm.save()
+        check_and_update_tournament_status(instance.tournament)
         return
 
     if not instance.category:
@@ -352,6 +389,8 @@ def update_rankings(sender, instance, created, **kwargs):
         post_save.disconnect(update_rankings, sender=Match)
         match.save(update_fields=['winner'])
         post_save.connect(update_rankings, sender=Match)
+        
+    check_and_update_tournament_status(instance.category.tournament if instance.category else None)
 
 @receiver(post_save, sender=Tournament)
 @receiver(post_save, sender=RankingTournament)
