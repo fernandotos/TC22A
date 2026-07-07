@@ -150,7 +150,7 @@ def tournament_schedule_pdf(request, tournament_id):
     for idx, match in enumerate(matches, 1):
         match_number_map[match.id] = idx
     
-    data = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
+    data = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Vencedor']]
     
     if tournament.start_date:
         current_datetime = datetime.combine(tournament.start_date, datetime.min.time().replace(hour=8, minute=0))
@@ -204,15 +204,11 @@ def tournament_schedule_pdf(request, tournament_id):
         
         resultado_str = ""
         if match.status == 'completed':
-            sets_scores = []
-            for i in range(1, 6):
-                sa = getattr(match, f'set{i}_a')
-                sb = getattr(match, f'set{i}_b')
-                if sa is not None and sb is not None:
-                    sets_scores.append(f"{sa}/{sb}")
-            resultado_str = " ".join(sets_scores)
-            if not resultado_str:
-                resultado_str = "W.O." if match.winner else "Encerrado"
+            if match.winner:
+                resultado_str = match.winner.name
+                # Se não tem sets lançados, pode ser útil colocar um (W.O.) do lado do nome para esclarecer? O usuário só pediu o nome, então deixarei o nome.
+            else:
+                resultado_str = "Encerrado"
         
         data.append([time_str, f"{idx}", tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
         
