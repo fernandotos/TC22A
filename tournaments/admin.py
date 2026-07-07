@@ -145,10 +145,25 @@ class KnockoutTournamentAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="template_eliminatorio.xlsx"'
         return response
 
+class MatchTournamentFilter(admin.SimpleListFilter):
+    title = 'tournament'
+    parameter_name = 'tournament'
+
+    def lookups(self, request, model_admin):
+        from .models import Tournament
+        tournaments = Tournament.objects.all()
+        return [(t.id, t.name) for t in tournaments]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            from django.db.models import Q
+            return queryset.filter(Q(tournament_id=self.value()) | Q(category__tournament_id=self.value()))
+        return queryset
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ('round_number', 'phase', 'category', 'tournament', 'player_a', 'player_b', 'status')
-    list_filter = ('tournament', 'category', 'status', 'round_number', 'phase')
+    list_filter = (MatchTournamentFilter, 'category', 'status', 'round_number', 'phase')
     search_fields = ('player_a__name', 'player_b__name')
     readonly_fields = ('winner', 'next_match')
     
