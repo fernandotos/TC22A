@@ -239,6 +239,18 @@
         }
         .home-title {
             color: black !important;
+            padding-right: 0 !important;
+            text-align: center;
+        }
+        .print-cover {
+            height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            page-break-after: always !important;
+            break-after: always !important;
+            margin: 0 !important;
         }
         .bracket-container {
             padding: 0 !important;
@@ -252,10 +264,10 @@
     }
 </style>
 
-<div style="margin-bottom: 2rem; position: relative;">
+<div class="print-cover" style="margin-bottom: 2rem; position: relative;">
     <a href="{% url 'tournaments:knockout_list' %}" class="back-link">&larr; Voltar para Torneios</a>
     
-    <button onclick="window.print()" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+    <button onclick="window.open(window.location.pathname + '?print=true', '_blank')" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
         Gerar PDF
     </button>
@@ -342,4 +354,16 @@
     {% endfor %}
 {% endif %}
 
+<script>
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            // Remove o parâmetro para não imprimir de novo se a pessoa der F5 na nova aba
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+    }
+</script>
 {% endblock %}
