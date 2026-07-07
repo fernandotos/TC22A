@@ -187,6 +187,27 @@ class Match(models.Model):
         verbose_name_plural = "Jogos"
         ordering = ['round_number', 'id']
 
+from django.db.models.signals import post_save, pre_save
+
+@receiver(pre_save, sender=Match)
+def reset_match_if_pending(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+        
+    try:
+        old_instance = Match.objects.get(pk=instance.pk)
+    except Match.DoesNotExist:
+        return
+        
+    # Se o admin mudou o status manualmente de volta para pendente, reseta os placares
+    if old_instance.status != 'pending' and instance.status == 'pending':
+        instance.sets_a = 0
+        instance.sets_b = 0
+        instance.winner = None
+        for i in range(1, 6):
+            setattr(instance, f'set{i}_a', None)
+            setattr(instance, f'set{i}_b', None)
+
 # Signal to calculate points when a match is saved
 @receiver(post_save, sender=Match)
 def update_rankings(sender, instance, created, **kwargs):
