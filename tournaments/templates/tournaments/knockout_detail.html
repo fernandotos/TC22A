@@ -202,11 +202,65 @@
         left: 0;
         width: 100vw;
     }
+    @media print {
+        @page {
+            size: landscape;
+            margin: 1cm;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+            /* Adjust scale for better fit on paper */
+            zoom: 0.8;
+        }
+        header, footer, .back-link, .print-button {
+            display: none !important;
+        }
+        .matchup {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+            background: white !important;
+        }
+        .matchup-wrapper::before,
+        .matchup-wrapper::after,
+        .matchup::before,
+        .matchup::after {
+            border-color: #999 !important;
+        }
+        .team.winner {
+            background: #f8f9fa !important;
+        }
+        .team.winner .team-name {
+            color: black !important;
+            font-weight: 800 !important;
+        }
+        .team.winner::before {
+            background: #555 !important;
+        }
+        .home-title {
+            color: black !important;
+        }
+        .bracket-container {
+            padding: 0 !important;
+            gap: 2rem !important;
+            page-break-inside: avoid;
+        }
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
 </style>
 
-<div style="margin-bottom: 2rem;">
+<div style="margin-bottom: 2rem; position: relative;">
     <a href="{% url 'tournaments:knockout_list' %}" class="back-link">&larr; Voltar para Torneios</a>
-    <h1 class="home-title" style="margin-top: 1rem;">{{ tournament.name }}</h1>
+    
+    <button onclick="window.print()" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Gerar PDF
+    </button>
+
+    <h1 class="home-title" style="margin-top: 1rem; padding-right: 120px;">{{ tournament.name }}</h1>
     <p class="home-subtitle" style="color: var(--text-muted);">
         Chave Eliminatória &bull; {{ tournament.get_competition_type_display }} &bull; {{ tournament.get_set_format_display }}
     </p>
