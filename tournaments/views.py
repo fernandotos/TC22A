@@ -160,6 +160,9 @@ def tournament_schedule_pdf(request, tournament_id):
     end_of_day = current_datetime.replace(hour=18, minute=0)
     match_interval = timedelta(hours=1, minutes=30)
     
+    current_phase = None
+    phase_rows = []
+    
     for idx, match in enumerate(matches, 1):
         if current_datetime + match_interval > end_of_day:
             current_datetime = current_datetime + timedelta(days=1)
@@ -167,6 +170,12 @@ def tournament_schedule_pdf(request, tournament_id):
             end_of_day = current_datetime.replace(hour=18, minute=0)
             
         time_str = current_datetime.strftime("%d/%m %H:%M")
+        
+        # Insere a linha de fase se mudou
+        if match.phase != current_phase:
+            current_phase = match.phase
+            phase_rows.append(len(data))
+            data.append([current_phase.upper() if current_phase else "FASE INDEFINIDA", "", "", "", "", "", "", ""])
         
         prev_a = None
         prev_b = None
@@ -210,7 +219,8 @@ def tournament_schedule_pdf(request, tournament_id):
         current_datetime += match_interval
         
     table = Table(data, colWidths=[70, 40, 180, 40, 20, 40, 180, 100])
-    table.setStyle(TableStyle([
+    
+    table_styles = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -222,7 +232,20 @@ def tournament_schedule_pdf(request, tournament_id):
         ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    ]
+    
+    for row_idx in phase_rows:
+        table_styles.extend([
+            ('SPAN', (0, row_idx), (-1, row_idx)),
+            ('BACKGROUND', (0, row_idx), (-1, row_idx), colors.HexColor('#dbeafe')),
+            ('TEXTCOLOR', (0, row_idx), (-1, row_idx), colors.black),
+            ('FONTNAME', (0, row_idx), (-1, row_idx), 'Helvetica-Bold'),
+            ('ALIGN', (0, row_idx), (-1, row_idx), 'CENTER'),
+            ('ALIGN', (2, row_idx), (2, row_idx), 'CENTER'),
+            ('ALIGN', (6, row_idx), (6, row_idx), 'CENTER'),
+        ])
+        
+    table.setStyle(TableStyle(table_styles))
     
     elements.append(table)
     doc.build(elements)
