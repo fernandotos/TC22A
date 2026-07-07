@@ -101,3 +101,136 @@ def knockout_detail(request, tournament_id):
         'tournament': tournament,
         'brackets': brackets_list
     })
+
+import io
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from datetime import datetime, timedelta
+
+def tournament_schedule_pdf(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id, tournament_type='knockout')
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=landscape(A4), 
+        rightMargin=30, 
+        leftMargin=30, 
+        topMargin=30, 
+        bottomMargin=30,
+        title=f"Chamada - {tournament.name}"
+    )
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = styles['Heading1']
+    title_style.alignment = 1 # Center
+    
+    normal_style = styles['Normal']
+    normal_style.alignment = 1 # Center
+    
+    elements.append(Paragraph("TC22A - Tenis Clube 22 de Agosto", title_style))
+    elements.append(Paragraph(f"Lista de Chamada: {tournament.name}", title_style))
+    
+    date_str = ""
+    if tournament.start_date:
+        date_str += f"Início: {tournament.start_date.strftime('%d/%m/%Y')} "
+    if tournament.end_date:
+        date_str += f"| Fim: {tournament.end_date.strftime('%d/%m/%Y')}"
+        
+    elements.append(Paragraph(f"Tipo: Torneio Eliminatório | {date_str}", normal_style))
+    elements.append(Spacer(1, 20))
+    
+    matches = list(Match.objects.filter(tournament=tournament).order_by('round_number', 'position_in_bracket'))
+    
+    match_number_map = {}
+    for idx, match in enumerate(matches, 1):
+        match_number_map[match.id] = idx
+    
+    data = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
+    
+    if tournament.start_date:
+        current_datetime = datetime.combine(tournament.start_date, datetime.min.time().replace(hour=8, minute=0))
+    else:
+        current_datetime = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+        
+    end_of_day = current_datetime.replace(hour=18, minute=0)
+    match_interval = timedelta(hours=1, minutes=30)
+    
+    for idx, match in enumerate(matches, 1):
+        if current_datetime + match_interval > end_of_day:
+            current_datetime = current_datetime + timedelta(days=1)
+            current_datetime = current_datetime.replace(hour=8, minute=0)
+            end_of_day = current_datetime.replace(hour=18, minute=0)
+            
+        time_str = current_datetime.strftime("%d/%m %H:%M")
+        
+        prev_a = None
+        prev_b = None
+        for prev in match.previous_matches.all():
+            if prev.position_in_bracket % 2 != 0:
+                prev_a = prev
+            else:
+                prev_b = prev
+                
+        if match.player_a:
+            tenista_a = match.player_a.name
+        elif prev_a:
+            tenista_a = f"Vencedor Jogo {match_number_map.get(prev_a.id, '?')}"
+        else:
+            tenista_a = "Bye"
+            
+        if match.player_b:
+            tenista_b = match.player_b.name
+        elif prev_b:
+            tenista_b = f"Vencedor Jogo {match_number_map.get(prev_b.id, '?')}"
+        else:
+            tenista_b = "Bye"
+        
+        sets_a = str(match.sets_a) if match.status == 'completed' else ""
+        sets_b = str(match.sets_b) if match.status == 'completed' else ""
+        
+        resultado_str = ""
+        if match.status == 'completed':
+            sets_scores = []
+            for i in range(1, 6):
+                sa = getattr(match, f'set{i}_a')
+                sb = getattr(match, f'set{i}_b')
+                if sa is not None and sb is not None:
+                    sets_scores.append(f"{sa}/{sb}")
+            resultado_str = " ".join(sets_scores)
+            if not resultado_str:
+                resultado_str = "W.O." if match.winner else "Encerrado"
+        
+        data.append([time_str, f"{idx}", tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
+        
+        current_datetime += match_interval
+        
+    table = Table(data, colWidths=[70, 40, 180, 40, 20, 40, 180, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (2, 1), (2, -1), 'RIGHT'),
+        ('ALIGN', (6, 1), (6, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    
+    elements.append(table)
+    doc.build(elements)
+    
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="chamada_{tournament.id}.pdf"'
+    response.write(pdf)
+    return response

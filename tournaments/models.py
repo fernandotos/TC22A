@@ -152,36 +152,54 @@ class Match(models.Model):
 # Signal to calculate points when a match is saved
 @receiver(post_save, sender=Match)
 def update_rankings(sender, instance, created, **kwargs):
-    # Sempre calcula o vencedor e sets automaticamente se finalizado
-    if instance.status == 'completed':
-        # Calcula sets ganhos baseado nos games caso o ADM tenha esquecido de preencher
-        if instance.sets_a == 0 and instance.sets_b == 0:
-            calc_a, calc_b = 0, 0
-            for i in range(1, 6):
-                sa = getattr(instance, f'set{i}_a')
-                sb = getattr(instance, f'set{i}_b')
-                if sa is not None and sb is not None:
-                    if sa > sb: calc_a += 1
-                    elif sb > sa: calc_b += 1
-            if calc_a > 0 or calc_b > 0:
+    fields_to_update = []
+    
+    if instance.status != 'cancelled':
+        calc_a, calc_b = 0, 0
+        games_filled = False
+        
+        for i in range(1, 6):
+            sa = getattr(instance, f'set{i}_a')
+            sb = getattr(instance, f'set{i}_b')
+            if sa is not None and sb is not None:
+                games_filled = True
+                if sa > sb: calc_a += 1
+                elif sb > sa: calc_b += 1
+                
+        # Se os games indicam que alguém ganhou sets (calculados via games)
+        if games_filled and (calc_a > 0 or calc_b > 0):
+            if instance.sets_a != calc_a or instance.sets_b != calc_b:
                 instance.sets_a = calc_a
                 instance.sets_b = calc_b
+                fields_to_update.extend(['sets_a', 'sets_b'])
+        
+        # Se tem sets_a ou sets_b preenchidos, então deve estar completed
+        if instance.sets_a > 0 or instance.sets_b > 0:
+            if instance.status != 'completed':
+                instance.status = 'completed'
+                fields_to_update.append('status')
                 
+    # Sempre calcula o vencedor automaticamente se finalizado
+    if instance.status == 'completed':
         calculated_winner = None
         if instance.sets_a > instance.sets_b:
             calculated_winner = instance.player_a
         elif instance.sets_b > instance.sets_a:
             calculated_winner = instance.player_b
             
-        if instance.winner != calculated_winner or (instance.sets_a > 0 or instance.sets_b > 0):
-            post_save.disconnect(update_rankings, sender=Match)
+        if instance.winner != calculated_winner:
             instance.winner = calculated_winner
-            instance.save(update_fields=['winner', 'sets_a', 'sets_b'])
-            post_save.connect(update_rankings, sender=Match)
+            if 'winner' not in fields_to_update:
+                fields_to_update.append('winner')
+                
     elif instance.status == 'pending' and instance.winner is not None:
-        post_save.disconnect(update_rankings, sender=Match)
         instance.winner = None
-        instance.save(update_fields=['winner'])
+        if 'winner' not in fields_to_update:
+            fields_to_update.append('winner')
+            
+    if fields_to_update:
+        post_save.disconnect(update_rankings, sender=Match)
+        instance.save(update_fields=fields_to_update)
         post_save.connect(update_rankings, sender=Match)
 
     # Se for jogo de Torneio Eliminatório, não calcula pontuação de Ranking

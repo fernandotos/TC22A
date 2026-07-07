@@ -8,7 +8,7 @@
 
 <div class="card-grid">
     {% for tournament in tournaments %}
-    <a href="{% url 'tournaments:knockout_detail' tournament.id %}" class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
+    <div class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
         {% if tournament.is_finished %}
         <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Encerrado</span>
         {% else %}
@@ -16,14 +16,19 @@
         {% endif %}
         <h3 style="margin-top: 0;">{{ tournament.name }}</h3>
         {% if tournament.start_date and tournament.end_date %}
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
             {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
         </p>
         {% endif %}
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
-            Ver Chave do Torneio &rarr;
-        </p>
-    </a>
+        <div style="display: flex; gap: 10px; margin-top: auto;">
+            <a href="{% url 'tournaments:knockout_detail' tournament.id %}" style="flex: 1; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.875rem;">
+                Ver Chave &rarr;
+            </a>
+            <a href="{% url 'tournaments:tournament_schedule_pdf' tournament.id %}" target="_blank" style="flex: 1; text-align: center; background: #c0392b; color: white; padding: 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.875rem; font-weight: bold;">
+                📄 Chamada PDF
+            </a>
+        </div>
+    </div>
     {% empty %}
     <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
         <p style="color: var(--text-muted);">Nenhum Torneio Eliminatório ativo no momento.</p>
