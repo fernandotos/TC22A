@@ -135,7 +135,45 @@ class Match(models.Model):
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
+    def get_match_number(self):
+        if getattr(self, '_match_number_cache', None) is not None:
+            return self._match_number_cache
+        if not self.tournament:
+            return "?"
+        matches = list(Match.objects.filter(tournament=self.tournament).order_by('round_number', 'position_in_bracket').values_list('id', flat=True))
+        try:
+            self._match_number_cache = matches.index(self.id) + 1
+            return self._match_number_cache
+        except ValueError:
+            return "?"
+
     def __str__(self):
+        if self.tournament and self.tournament.tournament_type == 'knockout':
+            prev_a = None
+            prev_b = None
+            if not self.player_a or not self.player_b:
+                for prev in self.previous_matches.all():
+                    if prev.position_in_bracket % 2 != 0:
+                        prev_a = prev
+                    else:
+                        prev_b = prev
+            
+            if self.player_a:
+                a_name = self.player_a.name
+            elif prev_a:
+                a_name = f"Vencedor do Jogo {prev_a.get_match_number()}"
+            else:
+                a_name = "Bye"
+                
+            if self.player_b:
+                b_name = self.player_b.name
+            elif prev_b:
+                b_name = f"Vencedor do Jogo {prev_b.get_match_number()}"
+            else:
+                b_name = "Bye"
+                
+            return f"Rodada {self.round_number}: {a_name} vs {b_name}"
+            
         a_name = self.player_a.name if self.player_a else "Bye"
         b_name = self.player_b.name if self.player_b else "Bye"
         return f"Rodada {self.round_number}: {a_name} vs {b_name}"
