@@ -149,9 +149,7 @@ def tournament_schedule_pdf(request, tournament_id):
     match_number_map = {}
     for idx, match in enumerate(matches, 1):
         match_number_map[match.id] = idx
-    
-    data = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Vencedor']]
-    
+        
     if tournament.start_date:
         current_datetime = datetime.combine(tournament.start_date, datetime.min.time().replace(hour=8, minute=0))
     else:
@@ -160,16 +158,75 @@ def tournament_schedule_pdf(request, tournament_id):
     end_of_day = current_datetime.replace(hour=18, minute=0)
     match_interval = timedelta(hours=1, minutes=30)
     
+    DIAS_SEMANA = ["SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO", "DOMINGO"]
+    
+    def create_day_table(t_data, p_rows):
+        # Ajusta colWidths para Hora mais estreita e os outros campos mais largos
+        t = Table(t_data, colWidths=[50, 40, 190, 40, 20, 40, 190, 100])
+        t_styles = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (2, 1), (2, -1), 'RIGHT'),
+            ('ALIGN', (6, 1), (6, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]
+        
+        for r_idx in p_rows:
+            t_styles.extend([
+                ('SPAN', (0, r_idx), (-1, r_idx)),
+                ('BACKGROUND', (0, r_idx), (-1, r_idx), colors.HexColor('#dbeafe')),
+                ('TEXTCOLOR', (0, r_idx), (-1, r_idx), colors.black),
+                ('FONTNAME', (0, r_idx), (-1, r_idx), 'Helvetica-Bold'),
+                ('ALIGN', (0, r_idx), (-1, r_idx), 'CENTER'),
+                ('ALIGN', (2, r_idx), (2, r_idx), 'CENTER'),
+                ('ALIGN', (6, r_idx), (6, r_idx), 'CENTER'),
+            ])
+            
+        t.setStyle(TableStyle(t_styles))
+        return t
+
+    def start_new_day(dt, elems):
+        d = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Vencedor']]
+        dia_semana = DIAS_SEMANA[dt.weekday()]
+        data_str = dt.strftime("%d/%m/%Y")
+        
+        heading_text = f"PROGRAMAÇÃO DOS JOGOS {data_str}  |  {dia_semana}"
+        heading_style = ParagraphStyle(
+            'DayHeading',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=12,
+            alignment=1, # Center
+            spaceAfter=10
+        )
+        elems.append(Paragraph(heading_text, heading_style))
+        return d, []
+        
+    data, phase_rows = start_new_day(current_datetime, elements)
     current_phase = None
-    phase_rows = []
     
     for idx, match in enumerate(matches, 1):
         if current_datetime + match_interval > end_of_day:
+            # Encerra tabela atual
+            elements.append(create_day_table(data, phase_rows))
+            elements.append(Spacer(1, 20))
+            
+            # Vai para próximo dia
             current_datetime = current_datetime + timedelta(days=1)
             current_datetime = current_datetime.replace(hour=8, minute=0)
             end_of_day = current_datetime.replace(hour=18, minute=0)
             
-        time_str = current_datetime.strftime("%d/%m %H:%M")
+            # Inicia nova tabela
+            data, phase_rows = start_new_day(current_datetime, elements)
+            current_phase = None
+            
+        time_str = current_datetime.strftime("%H:%M")
         
         # Insere a linha de fase se mudou
         if match.phase != current_phase:
@@ -206,7 +263,6 @@ def tournament_schedule_pdf(request, tournament_id):
         if match.status == 'completed':
             if match.winner:
                 resultado_str = match.winner.name
-                # Se não tem sets lançados, pode ser útil colocar um (W.O.) do lado do nome para esclarecer? O usuário só pediu o nome, então deixarei o nome.
             else:
                 resultado_str = "Encerrado"
         
@@ -214,36 +270,8 @@ def tournament_schedule_pdf(request, tournament_id):
         
         current_datetime += match_interval
         
-    table = Table(data, colWidths=[70, 40, 180, 40, 20, 40, 180, 100])
-    
-    table_styles = [
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('ALIGN', (2, 1), (2, -1), 'RIGHT'),
-        ('ALIGN', (6, 1), (6, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]
-    
-    for row_idx in phase_rows:
-        table_styles.extend([
-            ('SPAN', (0, row_idx), (-1, row_idx)),
-            ('BACKGROUND', (0, row_idx), (-1, row_idx), colors.HexColor('#dbeafe')),
-            ('TEXTCOLOR', (0, row_idx), (-1, row_idx), colors.black),
-            ('FONTNAME', (0, row_idx), (-1, row_idx), 'Helvetica-Bold'),
-            ('ALIGN', (0, row_idx), (-1, row_idx), 'CENTER'),
-            ('ALIGN', (2, row_idx), (2, row_idx), 'CENTER'),
-            ('ALIGN', (6, row_idx), (6, row_idx), 'CENTER'),
-        ])
-        
-    table.setStyle(TableStyle(table_styles))
-    
-    elements.append(table)
+    if len(data) > 1:
+        elements.append(create_day_table(data, phase_rows))
     doc.build(elements)
     
     pdf = buffer.getvalue()
