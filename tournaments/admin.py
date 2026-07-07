@@ -21,13 +21,15 @@ class CategoryPlayerInline(admin.TabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tournament')
-    list_filter = ('tournament',)
+    list_display = ('name', 'tournament', 'is_finished')
+    list_filter = ('tournament', 'is_finished')
+    list_editable = ('is_finished',)
     inlines = [CategoryPlayerInline]
 
 class CategoryInline(admin.TabularInline):
     model = Category
     extra = 0
+    fields = ('name', 'is_finished')
 
 from django.utils.safestring import mark_safe
 

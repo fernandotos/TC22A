@@ -51,6 +51,7 @@ class KnockoutTournament(Tournament):
 class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
     name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
+    is_finished = models.BooleanField(default=False, verbose_name="Encerrada", help_text="Se todas as categorias forem encerradas, o ranking também será.")
 
     def __str__(self):
         if self.tournament:
@@ -267,4 +268,19 @@ def update_rankings(sender, instance, created, **kwargs):
         match.save(update_fields=['winner'])
         post_save.connect(update_rankings, sender=Match)
 
+@receiver(post_save, sender=Tournament)
+def sync_tournament_finished_state(sender, instance, **kwargs):
+    if instance.is_finished:
+        instance.categories.filter(is_finished=False).update(is_finished=True)
 
+@receiver(post_save, sender=Category)
+def sync_category_finished_state(sender, instance, **kwargs):
+    if instance.tournament:
+        tournament = instance.tournament
+        if instance.is_finished:
+            all_finished = not tournament.categories.filter(is_finished=False).exists()
+            if all_finished and not tournament.is_finished:
+                Tournament.objects.filter(id=tournament.id).update(is_finished=True)
+        else:
+            if tournament.is_finished:
+                Tournament.objects.filter(id=tournament.id).update(is_finished=False)

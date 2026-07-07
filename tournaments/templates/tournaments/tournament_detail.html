@@ -50,8 +50,13 @@
 <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Categorias</h2>
 <div class="card-grid" style="margin-top: 0;">
     {% for category in categories %}
-    <a href="{% url 'tournaments:category_detail' category.id %}" class="card">
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="card" {% if category.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
         <h3>{{ category.name }}</h3>
+        {% if category.is_finished %}
+        <div style="margin-top: 0.5rem;">
+            <span style="display: inline-block; background: #27ae60; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Encerrada</span>
+        </div>
+        {% endif %}
         <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
             Ver jogos e ranking &rarr;
         </p>
