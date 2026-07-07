@@ -239,22 +239,34 @@
                     <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
                         <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
                         <span class="team-score">
-                            {% if match.set1_a != None %}<span>{{ match.set1_a }}</span>{% endif %}
-                            {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
-                            {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
-                            {% if match.set4_a != None %}<span>{{ match.set4_a }}</span>{% endif %}
-                            {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
+                            {% if match.set1_a != None %}
+                                <span>{{ match.set1_a }}</span>
+                                {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
+                                {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
+                                {% if match.set4_a != None %}<span>{{ match.set4_a }}</span>{% endif %}
+                                {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
+                            {% elif match.status == 'completed' and match.sets_a != None %}
+                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_a }}</span>
+                            {% elif match.status == 'completed' and match.winner == match.player_a %}
+                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                            {% endif %}
                         </span>
                     </div>
                     
                     <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
                         <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
                         <span class="team-score">
-                            {% if match.set1_b != None %}<span>{{ match.set1_b }}</span>{% endif %}
-                            {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
-                            {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
-                            {% if match.set4_b != None %}<span>{{ match.set4_b }}</span>{% endif %}
-                            {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
+                            {% if match.set1_b != None %}
+                                <span>{{ match.set1_b }}</span>
+                                {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
+                                {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
+                                {% if match.set4_b != None %}<span>{{ match.set4_b }}</span>{% endif %}
+                                {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
+                            {% elif match.status == 'completed' and match.sets_b != None %}
+                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_b }}</span>
+                            {% elif match.status == 'completed' and match.winner == match.player_b %}
+                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                            {% endif %}
                         </span>
                     </div>
                     

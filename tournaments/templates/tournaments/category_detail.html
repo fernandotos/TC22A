@@ -55,7 +55,11 @@
                     </td>
                     <td style="font-weight: 600; letter-spacing: 2px;">
                         {% if match.status == 'completed' %}
-                        {{ match.sets_a }} x {{ match.sets_b }}
+                            {% if match.sets_a != None and match.sets_b != None %}
+                                {{ match.sets_a }} x {{ match.sets_b }}
+                            {% else %}
+                                W.O.
+                            {% endif %}
                         {% elif match.status == 'cancelled' %}
                         N/O
                         {% else %}
