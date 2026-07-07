@@ -141,7 +141,9 @@ def tournament_schedule_pdf(request, tournament_id):
     if tournament.end_date:
         date_str += f"| Fim: {tournament.end_date.strftime('%d/%m/%Y')}"
         
-    elements.append(Paragraph(f"Tipo: Torneio Eliminatório | {date_str}", normal_style))
+    formato_sets = tournament.get_set_format_display()
+        
+    elements.append(Paragraph(f"Tipo: Torneio Eliminatório | {formato_sets} | {date_str}", normal_style))
     elements.append(Spacer(1, 20))
     
     matches = list(Match.objects.filter(tournament=tournament).order_by('round_number', 'position_in_bracket'))
