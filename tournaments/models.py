@@ -113,8 +113,8 @@ class Match(models.Model):
     
     # Results
     # General Results
-    sets_a = models.IntegerField(default=0, verbose_name="Sets Ganhos (A)")
-    sets_b = models.IntegerField(default=0, verbose_name="Sets Ganhos (B)")
+    sets_a = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (A)")
+    sets_b = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (B)")
     
     # Games per Set
     set1_a = models.IntegerField(null=True, blank=True, verbose_name="Set 1 - A")
@@ -201,8 +201,8 @@ def reset_match_if_pending(sender, instance, **kwargs):
         
     # Se o admin mudou o status manualmente de volta para pendente, reseta os placares
     if old_instance.status != 'pending' and instance.status == 'pending':
-        instance.sets_a = 0
-        instance.sets_b = 0
+        instance.sets_a = None
+        instance.sets_b = None
         instance.winner = None
         for i in range(1, 6):
             setattr(instance, f'set{i}_a', None)
@@ -233,7 +233,7 @@ def update_rankings(sender, instance, created, **kwargs):
                 fields_to_update.extend(['sets_a', 'sets_b'])
         
         # Se tem sets_a ou sets_b preenchidos, então deve estar completed
-        if instance.sets_a > 0 or instance.sets_b > 0:
+        if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
             if instance.status != 'completed':
                 instance.status = 'completed'
                 fields_to_update.append('status')
@@ -241,9 +241,9 @@ def update_rankings(sender, instance, created, **kwargs):
     # Sempre calcula o vencedor automaticamente se finalizado
     if instance.status == 'completed':
         calculated_winner = None
-        if instance.sets_a > instance.sets_b:
+        if (instance.sets_a or 0) > (instance.sets_b or 0):
             calculated_winner = instance.player_a
-        elif instance.sets_b > instance.sets_a:
+        elif (instance.sets_b or 0) > (instance.sets_a or 0):
             calculated_winner = instance.player_b
             
         if instance.winner != calculated_winner:
