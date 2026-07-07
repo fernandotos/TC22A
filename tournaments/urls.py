@@ -10,4 +10,5 @@ urlpatterns = [
     path('categoria/<int:category_id>/ranking/', views.category_ranking, name='category_ranking'),
     path('torneios/', views.knockout_list, name='knockout_list'),
     path('torneio/<int:tournament_id>/', views.knockout_detail, name='knockout_detail'),
+    path('torneio/<int:tournament_id>/chamada-pdf/', views.tournament_schedule_pdf, name='tournament_schedule_pdf'),
 ]
