@@ -29,6 +29,10 @@ class Tournament(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado", help_text="Marque esta opção quando o torneio/ranking chegar ao fim.")
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_finished = self.is_finished
+
     def __str__(self):
         return self.name
         
@@ -52,6 +56,10 @@ class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
     name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrada", help_text="Se todas as categorias forem encerradas, o ranking também será.")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_finished = self.is_finished
 
     def __str__(self):
         if self.tournament:
@@ -269,18 +277,33 @@ def update_rankings(sender, instance, created, **kwargs):
         post_save.connect(update_rankings, sender=Match)
 
 @receiver(post_save, sender=Tournament)
+@receiver(post_save, sender=RankingTournament)
+@receiver(post_save, sender=KnockoutTournament)
 def sync_tournament_finished_state(sender, instance, **kwargs):
-    if instance.is_finished:
-        instance.categories.filter(is_finished=False).update(is_finished=True)
+    if hasattr(instance, '_initial_is_finished') and instance.is_finished != instance._initial_is_finished:
+        if instance.is_finished:
+            instance.categories.filter(is_finished=False).update(is_finished=True)
+        else:
+            instance.categories.filter(is_finished=True).update(is_finished=False)
+        instance._initial_is_finished = instance.is_finished
 
 @receiver(post_save, sender=Category)
 def sync_category_finished_state(sender, instance, **kwargs):
-    if instance.tournament:
+    if not instance.tournament:
+        return
+        
+    if hasattr(instance, '_initial_is_finished') and instance.is_finished != instance._initial_is_finished:
         tournament = instance.tournament
         if instance.is_finished:
             all_finished = not tournament.categories.filter(is_finished=False).exists()
             if all_finished and not tournament.is_finished:
                 Tournament.objects.filter(id=tournament.id).update(is_finished=True)
+                tournament.is_finished = True
+                tournament._initial_is_finished = True
         else:
             if tournament.is_finished:
                 Tournament.objects.filter(id=tournament.id).update(is_finished=False)
+                tournament.is_finished = False
+                tournament._initial_is_finished = False
+                
+        instance._initial_is_finished = instance.is_finished
