@@ -301,12 +301,27 @@ def update_rankings(sender, instance, created, **kwargs):
     if instance.tournament and instance.tournament.tournament_type == 'knockout':
         if instance.next_match:
             nm = instance.next_match
-            # Avança o vencedor se estiver finalizado, senão limpa a vaga
+            new_player = instance.winner if instance.status == 'completed' else None
+            changed = False
             if instance.position_in_bracket % 2 != 0:
-                nm.player_a = instance.winner if instance.status == 'completed' else None
+                if nm.player_a != new_player:
+                    nm.player_a = new_player
+                    changed = True
             else:
-                nm.player_b = instance.winner if instance.status == 'completed' else None
-            nm.save()
+                if nm.player_b != new_player:
+                    nm.player_b = new_player
+                    changed = True
+                    
+            if changed:
+                if new_player is None:
+                    nm.status = 'pending'
+                    nm.sets_a = None
+                    nm.sets_b = None
+                    nm.winner = None
+                    for i in range(1, 6):
+                        setattr(nm, f'set{i}_a', None)
+                        setattr(nm, f'set{i}_b', None)
+                nm.save()
         check_and_update_tournament_status(instance.tournament)
         return
 
