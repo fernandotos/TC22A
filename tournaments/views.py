@@ -107,7 +107,7 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from datetime import datetime, timedelta
 
 def tournament_schedule_pdf(request, tournament_id):
