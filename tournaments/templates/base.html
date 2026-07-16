@@ -105,7 +105,7 @@
 <body>
     <header>
         <div class="container header-content">
-            <a href="{% url 'tournaments:home' %}" class="logo">TC22A<span>.</span>Ranking</a>
+            <a href="{% url 'tournaments:home' %}" class="logo">{% block logo_text %}TC22A<span>.</span>Ranking{% endblock %}</a>
             <nav class="header-nav">
                 <a href="{% url 'tournaments:home' %}" class="nav-link">Ranking</a>
                 <span class="nav-divider">|</span>
