@@ -162,14 +162,14 @@ class MatchTournamentFilter(admin.SimpleListFilter):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('round_number', 'phase', 'category', 'tournament', 'player_a', 'player_b', 'status')
+    list_display = ('round_number', 'phase', 'category', 'tournament', 'player_a', 'player_b', 'status', 'youtube_link')
     list_filter = (MatchTournamentFilter, 'category', 'status', 'round_number', 'phase')
     search_fields = ('player_a__name', 'player_b__name')
     readonly_fields = ('winner', 'next_match')
     
     fieldsets = (
         ('Informações Gerais', {
-            'fields': ('tournament', 'category', 'round_number', 'phase', 'position_in_bracket', 'next_match', 'status', 'winner')
+            'fields': ('tournament', 'category', 'round_number', 'phase', 'position_in_bracket', 'next_match', 'status', 'winner', 'youtube_link')
         }),
         ('Atletas', {
             'fields': ('player_a', 'player_b')

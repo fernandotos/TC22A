@@ -134,6 +134,7 @@ class Match(models.Model):
     position_in_bracket = models.IntegerField(null=True, blank=True)
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    youtube_link = models.URLField(verbose_name="Link do Jogo no YouTube", blank=True, null=True)
 
     def get_match_number(self):
         if getattr(self, '_match_number_cache', None) is not None:
