@@ -29,6 +29,12 @@ class Tournament(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado", help_text="Marque esta opção quando o torneio/ranking chegar ao fim.")
     
+    # Configurações de Pontuação para Ranking
+    points_winner_2x0 = models.IntegerField(default=3, verbose_name="Pontos (Vitória 2x0)", help_text="Pontos recebidos pelo vencedor de um jogo 2x0.")
+    points_winner_2x1 = models.IntegerField(default=2, verbose_name="Pontos (Vitória 2x1)", help_text="Pontos recebidos pelo vencedor de um jogo 2x1.")
+    points_loser_2x1 = models.IntegerField(default=1, verbose_name="Pontos (Derrota 2x1)", help_text="Pontos recebidos pelo perdedor de um jogo 2x1.")
+    points_loser_2x0 = models.IntegerField(default=0, verbose_name="Pontos (Derrota 2x0)", help_text="Pontos recebidos pelo perdedor de um jogo 2x0.")
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._initial_is_finished = self.is_finished
@@ -270,10 +276,19 @@ def update_rankings(sender, instance, created, **kwargs):
                 fields_to_update.extend(['sets_a', 'sets_b'])
         
         # Se tem sets_a ou sets_b preenchidos, então deve estar completed
-        if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
-            if instance.status != 'completed':
-                instance.status = 'completed'
+        if not instance.is_bye:
+            if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
+                if instance.status != 'completed':
+                    instance.status = 'completed'
+                    fields_to_update.append('status')
+            elif instance.status == 'completed':
+                instance.status = 'pending'
                 fields_to_update.append('status')
+        else:
+            if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
+                if instance.status != 'completed':
+                    instance.status = 'completed'
+                    fields_to_update.append('status')
                 
     # Sempre calcula o vencedor automaticamente se finalizado
     if instance.status == 'completed':
@@ -342,6 +357,13 @@ def update_rankings(sender, instance, created, **kwargs):
 
     # Recalculate
     completed_matches = Match.objects.filter(category=category, status__in=['completed', 'cancelled'])
+    
+    tournament = category.tournament
+    pts_w_2x0 = tournament.points_winner_2x0 if tournament else 3
+    pts_w_2x1 = tournament.points_winner_2x1 if tournament else 2
+    pts_l_2x1 = tournament.points_loser_2x1 if tournament else 1
+    pts_l_2x0 = tournament.points_loser_2x0 if tournament else 0
+
     for match in completed_matches:
         cp_a = CategoryPlayer.objects.filter(category=category, player=match.player_a).first() if match.player_a else None
         cp_b = CategoryPlayer.objects.filter(category=category, player=match.player_b).first() if match.player_b else None
@@ -351,7 +373,7 @@ def update_rankings(sender, instance, created, **kwargs):
             if cp_real and match.status == 'completed':
                 cp_real.matches_played += 1
                 if (cp_real == cp_a and match.sets_a == 2) or (cp_real == cp_b and match.sets_b == 2):
-                    cp_real.points += 3
+                    cp_real.points += pts_w_2x0
                     cp_real.wins += 1
                 cp_real.save()
             continue
@@ -372,28 +394,27 @@ def update_rankings(sender, instance, created, **kwargs):
         cp_b.matches_played += 1
         
         # Determine points
-        # 2x0 -> 3 pts winner, 0 pts loser
-        # 2x1 -> 2 pts winner, 1 pt loser
-        
         if match.sets_a == 2 and match.sets_b == 0:
-            cp_a.points += 3
+            cp_a.points += pts_w_2x0
+            cp_b.points += pts_l_2x0
             cp_a.wins += 1
             cp_b.losses += 1
             match.winner = match.player_a
         elif match.sets_a == 2 and match.sets_b == 1:
-            cp_a.points += 2
-            cp_b.points += 1
+            cp_a.points += pts_w_2x1
+            cp_b.points += pts_l_2x1
             cp_a.wins += 1
             cp_b.losses += 1
             match.winner = match.player_a
         elif match.sets_b == 2 and match.sets_a == 0:
-            cp_b.points += 3
+            cp_b.points += pts_w_2x0
+            cp_a.points += pts_l_2x0
             cp_b.wins += 1
             cp_a.losses += 1
             match.winner = match.player_b
         elif match.sets_b == 2 and match.sets_a == 1:
-            cp_b.points += 2
-            cp_a.points += 1
+            cp_b.points += pts_w_2x1
+            cp_a.points += pts_l_2x1
             cp_b.wins += 1
             cp_a.losses += 1
             match.winner = match.player_b

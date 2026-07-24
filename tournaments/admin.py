@@ -51,6 +51,19 @@ class RankingTournamentAdmin(admin.ModelAdmin):
     list_editable = ('is_active', 'current_round')
     inlines = [CategoryInline]
     
+    fieldsets = (
+        ('Informações Gerais', {
+            'fields': ('name', 'competition_type', 'set_format', 'current_round', 'start_date', 'end_date', 'is_active', 'is_finished')
+        }),
+        ('Pontuação do Ranking', {
+            'fields': ('points_winner_2x0', 'points_winner_2x1', 'points_loser_2x1', 'points_loser_2x0'),
+            'description': 'Configure a pontuação que os atletas receberão após os jogos do ranking.'
+        }),
+        ('Importação', {
+            'fields': ('excel_file',)
+        }),
+    )
+    
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tournament_type='ranking')
 
