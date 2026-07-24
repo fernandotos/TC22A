@@ -42,61 +42,116 @@ def knockout_list(request):
 def knockout_detail(request, tournament_id):
     tournament = get_object_or_404(Tournament, id=tournament_id, tournament_type='knockout')
     
-    matches = Match.objects.filter(tournament=tournament).order_by('round_number', 'position_in_bracket')
+    all_matches = list(Match.objects.filter(tournament=tournament).select_related('category').order_by('round_number', 'position_in_bracket'))
+    has_categories = tournament.categories.exists()
     
-    matches_list = list(matches)
-    match_by_id = {}
-    children_by_next_match = {}
+    brackets_list = []
     
-    num_brackets = getattr(tournament, 'number_of_brackets', 1)
-    
-    # Calculate bracket labels for round 1
-    if num_brackets > 1:
-        r1_matches = [m for m in matches_list if m.round_number == 1]
-        total_r1 = len(r1_matches)
-        if total_r1 > 0:
-            matches_per_bracket = total_r1 // num_brackets
-            if matches_per_bracket > 0:
-                for m in r1_matches:
-                    idx = m.position_in_bracket - 1
-                    if idx % matches_per_bracket == 0:
-                        m.bracket_label = f"Chave { (idx // matches_per_bracket) + 1 }"
-
-    rounds_dict = {}
-    
-    match_counter = 1
-    for m in matches_list:
-        m.match_number = match_counter
-        match_by_id[m.id] = m
-        match_counter += 1
+    if not has_categories:
+        match_by_id = {}
+        children_by_next_match = {}
+        rounds_dict = {}
         
-        if m.next_match_id:
-            if m.next_match_id not in children_by_next_match:
-                children_by_next_match[m.next_match_id] = []
-            children_by_next_match[m.next_match_id].append(m)
+        num_brackets = getattr(tournament, 'number_of_brackets', 1)
+        if num_brackets > 1:
+            r1_matches = [m for m in all_matches if m.round_number == 1]
+            total_r1 = len(r1_matches)
+            if total_r1 > 0:
+                matches_per_bracket = total_r1 // num_brackets
+                if matches_per_bracket > 0:
+                    for m in r1_matches:
+                        idx = m.position_in_bracket - 1
+                        if idx % matches_per_bracket == 0:
+                            m.bracket_label = f"Chave { (idx // matches_per_bracket) + 1 }"
+                            
+        match_counter = 1
+        for m in all_matches:
+            m.match_number = match_counter
+            match_by_id[m.id] = m
+            match_counter += 1
             
-        if m.round_number not in rounds_dict:
-            rounds_dict[m.round_number] = []
-        rounds_dict[m.round_number].append(m)
-        
-    for m in matches_list:
-        m.prev_match_a = None
-        m.prev_match_b = None
-        if m.id in children_by_next_match:
-            for prev in children_by_next_match[m.id]:
-                if prev.position_in_bracket % 2 != 0:
-                    m.prev_match_a = prev
-                else:
-                    m.prev_match_b = prev
-                    
-    if not matches_list:
-        brackets_list = []
+            if m.next_match_id:
+                if m.next_match_id not in children_by_next_match:
+                    children_by_next_match[m.next_match_id] = []
+                children_by_next_match[m.next_match_id].append(m)
+                
+            if m.round_number not in rounds_dict:
+                rounds_dict[m.round_number] = []
+            rounds_dict[m.round_number].append(m)
+            
+        for m in all_matches:
+            m.prev_match_a = None
+            m.prev_match_b = None
+            if m.id in children_by_next_match:
+                for prev in children_by_next_match[m.id]:
+                    if prev.position_in_bracket % 2 != 0:
+                        m.prev_match_a = prev
+                    else:
+                        m.prev_match_b = prev
+                        
+        if all_matches:
+            brackets_list.append({
+                'name': "Chave Principal",
+                'rounds': rounds_dict
+            })
     else:
-        brackets_list = [{
-            'name': "Chave Principal",
-            'rounds': rounds_dict
-        }]
+        categories_dict = {}
+        for m in all_matches:
+            if m.category not in categories_dict:
+                categories_dict[m.category] = []
+            categories_dict[m.category].append(m)
+            
+        sorted_categories = sorted(categories_dict.keys(), key=lambda c: c.name if c else "")
+        
+        for category in sorted_categories:
+            cat_matches = categories_dict[category]
+            match_by_id = {}
+            children_by_next_match = {}
+            rounds_dict = {}
+            
+            num_brackets = getattr(tournament, 'number_of_brackets', 1)
+            if num_brackets > 1:
+                r1_matches = [m for m in cat_matches if m.round_number == 1]
+                total_r1 = len(r1_matches)
+                if total_r1 > 0:
+                    matches_per_bracket = total_r1 // num_brackets
+                    if matches_per_bracket > 0:
+                        for m in r1_matches:
+                            idx = m.position_in_bracket - 1
+                            if idx % matches_per_bracket == 0:
+                                m.bracket_label = f"Chave { (idx // matches_per_bracket) + 1 }"
+                                
+            match_counter = 1
+            for m in cat_matches:
+                m.match_number = match_counter
+                match_by_id[m.id] = m
+                match_counter += 1
+                
+                if m.next_match_id:
+                    if m.next_match_id not in children_by_next_match:
+                        children_by_next_match[m.next_match_id] = []
+                    children_by_next_match[m.next_match_id].append(m)
                     
+                if m.round_number not in rounds_dict:
+                    rounds_dict[m.round_number] = []
+                rounds_dict[m.round_number].append(m)
+                
+            for m in cat_matches:
+                m.prev_match_a = None
+                m.prev_match_b = None
+                if m.id in children_by_next_match:
+                    for prev in children_by_next_match[m.id]:
+                        if prev.position_in_bracket % 2 != 0:
+                            m.prev_match_a = prev
+                        else:
+                            m.prev_match_b = prev
+                            
+            if cat_matches:
+                brackets_list.append({
+                    'name': f"Categoria {category.name}" if category else "Sem Categoria",
+                    'rounds': rounds_dict
+                })
+                
     return render(request, 'tournaments/knockout_detail.html', {
         'tournament': tournament,
         'brackets': brackets_list
@@ -146,10 +201,32 @@ def tournament_schedule_pdf(request, tournament_id):
     elements.append(Paragraph(f"Tipo: Torneio Eliminatório | {formato_sets} | {date_str}", normal_style))
     elements.append(Spacer(1, 20))
     
-    matches = list(Match.objects.filter(tournament=tournament).order_by('round_number', 'position_in_bracket'))
+    has_categories = tournament.categories.exists()
+    
+    raw_matches = list(Match.objects.filter(tournament=tournament).select_related('category', 'player_a', 'player_b').order_by('round_number', 'position_in_bracket'))
+    
+    if has_categories:
+        from collections import defaultdict
+        rounds_dict = defaultdict(lambda: defaultdict(list))
+        for m in raw_matches:
+            cat_name = m.category.name if m.category else ""
+            rounds_dict[m.round_number][cat_name].append(m)
+            
+        interleaved_matches = []
+        for r_num in sorted(rounds_dict.keys()):
+            cat_dict = rounds_dict[r_num]
+            cat_names = sorted(cat_dict.keys())
+            
+            while any(cat_dict.values()):
+                for cname in cat_names:
+                    if cat_dict[cname]:
+                        interleaved_matches.append(cat_dict[cname].pop(0))
+        matches = interleaved_matches
+    else:
+        matches = raw_matches
     
     match_number_map = {}
-    for idx, match in enumerate(matches, 1):
+    for idx, match in enumerate(raw_matches, 1): # keep original numbering based on raw list
         match_number_map[match.id] = idx
         
     if tournament.start_date:
@@ -163,14 +240,23 @@ def tournament_schedule_pdf(request, tournament_id):
     DIAS_SEMANA = ["SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO", "DOMINGO"]
     
     def create_day_table(t_data, p_rows):
-        # Ajusta colWidths para Hora mais estreita e os outros campos mais largos
-        t = Table(t_data, colWidths=[50, 40, 190, 40, 20, 40, 190, 100])
+        if has_categories:
+            t = Table(t_data, colWidths=[50, 35, 70, 140, 35, 20, 35, 140, 95])
+            span_end = 8
+            align_b = 7
+            align_x = 3
+        else:
+            t = Table(t_data, colWidths=[50, 40, 190, 40, 20, 40, 190, 100])
+            span_end = 7
+            align_b = 6
+            align_x = 2
+            
         t_styles = [
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('ALIGN', (2, 1), (2, -1), 'RIGHT'),
-            ('ALIGN', (6, 1), (6, -1), 'LEFT'),
+            ('ALIGN', (align_x, 1), (align_x, -1), 'RIGHT'),
+            ('ALIGN', (align_b, 1), (align_b, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
@@ -186,15 +272,19 @@ def tournament_schedule_pdf(request, tournament_id):
                 ('TEXTCOLOR', (0, r_idx), (-1, r_idx), colors.black),
                 ('FONTNAME', (0, r_idx), (-1, r_idx), 'Helvetica-Bold'),
                 ('ALIGN', (0, r_idx), (-1, r_idx), 'CENTER'),
-                ('ALIGN', (2, r_idx), (2, r_idx), 'CENTER'),
-                ('ALIGN', (6, r_idx), (6, r_idx), 'CENTER'),
+                ('ALIGN', (align_x, r_idx), (align_x, r_idx), 'CENTER'),
+                ('ALIGN', (align_b, r_idx), (align_b, r_idx), 'CENTER'),
             ])
             
         t.setStyle(TableStyle(t_styles))
         return t
 
     def start_new_day(dt, elems):
-        d = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
+        if has_categories:
+            d = [['Hora', 'Jogo', 'Cat.', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
+        else:
+            d = [['Hora', 'Jogo', 'Tenista A', 'Sets A', 'X', 'Sets B', 'Tenista B', 'Resultado']]
+            
         dia_semana = DIAS_SEMANA[dt.weekday()]
         data_str = dt.strftime("%d/%m/%Y")
         
@@ -213,7 +303,7 @@ def tournament_schedule_pdf(request, tournament_id):
     data, phase_rows = start_new_day(current_datetime, elements)
     current_phase = None
     
-    for idx, match in enumerate(matches, 1):
+    for idx_loop, match in enumerate(matches):
         if current_datetime + match_interval > end_of_day:
             # Encerra tabela atual
             elements.append(create_day_table(data, phase_rows))
@@ -234,7 +324,10 @@ def tournament_schedule_pdf(request, tournament_id):
         if match.phase != current_phase:
             current_phase = match.phase
             phase_rows.append(len(data))
-            data.append([current_phase.upper() if current_phase else "FASE INDEFINIDA", "", "", "", "", "", "", ""])
+            if has_categories:
+                data.append([current_phase.upper() if current_phase else "FASE INDEFINIDA", "", "", "", "", "", "", "", ""])
+            else:
+                data.append([current_phase.upper() if current_phase else "FASE INDEFINIDA", "", "", "", "", "", "", ""])
         
         prev_a = None
         prev_b = None
@@ -277,7 +370,12 @@ def tournament_schedule_pdf(request, tournament_id):
             else:
                 resultado_str = "W.O." if match.winner else "Encerrado"
         
-        data.append([time_str, f"{idx}", tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
+        m_num = match_number_map.get(match.id, '?')
+        if has_categories:
+            cat_label = match.category.name if match.category else ""
+            data.append([time_str, f"{m_num}", cat_label, tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
+        else:
+            data.append([time_str, f"{m_num}", tenista_a, sets_a, "X", sets_b, tenista_b, resultado_str])
         
         current_datetime += match_interval
         

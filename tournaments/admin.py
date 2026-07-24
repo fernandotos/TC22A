@@ -148,7 +148,7 @@ class KnockoutTournamentAdmin(admin.ModelAdmin):
     def download_template_view(self, request):
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_cadastro = pd.DataFrame(columns=['Nome', 'Cabeça de Chave'])
+            df_cadastro = pd.DataFrame(columns=['Nome', 'Cabeça de Chave', 'Categoria'])
             df_cadastro.to_excel(writer, sheet_name='Atletas', index=False)
         output.seek(0)
         response = HttpResponse(

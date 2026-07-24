@@ -209,6 +209,7 @@ def process_excel_knockout(file, tournament):
         return False, "A coluna 'Nome' é obrigatória.", []
         
     has_seed = 'Cabeça de Chave' in df.columns
+    has_cat = 'Categoria' in df.columns
     
     players_data = []
     for _, row in df.iterrows():
@@ -222,27 +223,17 @@ def process_excel_knockout(file, tournament):
             if val == 'X':
                 is_seed = True
                 
-        players_data.append({'name': name, 'is_seed': is_seed})
+        cat = None
+        if has_cat and pd.notna(row['Categoria']):
+            cat = str(row['Categoria']).strip()
+            if cat.lower() == 'nan':
+                cat = None
+                
+        players_data.append({'name': name, 'is_seed': is_seed, 'category': cat})
         
     if not players_data:
         return False, "Nenhum atleta encontrado na planilha.", []
         
-    # Get or create players
-    player_objs = []
-    seeded_players = []
-    unseeded_players = []
-    
-    for pd_item in players_data:
-        player, _ = Player.objects.get_or_create(name=pd_item['name'])
-        player_objs.append(player)
-        if pd_item['is_seed']:
-            seeded_players.append(player)
-        else:
-            unseeded_players.append(player)
-            
-    # Randomize unseeded
-    random.shuffle(unseeded_players)
-    
     # Delete existing matches and categories for this tournament to rebuild bracket
     Match.objects.filter(tournament=tournament).delete()
     Category.objects.filter(tournament=tournament).delete()
@@ -250,73 +241,110 @@ def process_excel_knockout(file, tournament):
     num_brackets = getattr(tournament, 'number_of_brackets', 1)
     if num_brackets < 1:
         num_brackets = 1
+
+    # Group players
+    groups = {}
+    if has_cat:
+        for pd_item in players_data:
+            cat_name = pd_item['category']
+            if not cat_name:
+                cat_name = "Sem Categoria"
+            if cat_name not in groups:
+                groups[cat_name] = []
+            groups[cat_name].append(pd_item)
+    else:
+        groups[None] = players_data
         
-    num_players = len(player_objs)
-    bracket_size = 2 ** math.ceil(math.log2(max(2, num_players)))
-    
-    # Pad players to power of 2
-    padded_players = seeded_players + unseeded_players
-    while len(padded_players) < bracket_size:
-        padded_players.append(None)
-        
-    seed_pattern = get_seed_order(bracket_size)
-    
-    slots = [None] * bracket_size
-    for i, rank in enumerate(seed_pattern):
-        slots[i] = padded_players[rank - 1]
-        
-    def get_phase_name(round_num, total_rounds):
-        rounds_left = total_rounds - round_num
-        
-        if rounds_left == 0: return "Final"
-        if rounds_left == 1: return "Semifinal"
-        if rounds_left == 2: return "Quartas de Final"
-        if rounds_left == 3: return "Oitavas de Final"
-        
-        if num_brackets == 1:
-            if rounds_left == 4: return "Dezesseis-avos"
-            if rounds_left == 5: return "Trinta-e-dois-avos"
+    for cat_name, group_players in groups.items():
+        category_obj = None
+        if cat_name is not None:
+            category_obj, _ = Category.objects.get_or_create(tournament=tournament, name=cat_name)
             
-        return f"{round_num}ª Rodada"
+        player_objs = []
+        seeded_players = []
+        unseeded_players = []
         
-    def build_tree(round_num, max_rounds, match_pos, next_m):
-        m = Match.objects.create(
-            tournament=tournament,
-            round_number=round_num,
-            phase=get_phase_name(round_num, max_rounds),
-            next_match=next_m,
-            position_in_bracket=match_pos
-        )
-        if round_num > 1:
-            build_tree(round_num - 1, max_rounds, match_pos * 2 - 1, m)
-            build_tree(round_num - 1, max_rounds, match_pos * 2, m)
-        return m
-        
-    num_rounds = int(math.log2(bracket_size))
-    build_tree(num_rounds, num_rounds, 1, None)
-    
-    r1_matches = Match.objects.filter(tournament=tournament, round_number=1).order_by('position_in_bracket')
-    
-    for i, match in enumerate(r1_matches):
-        p1 = slots[i*2]
-        p2 = slots[i*2 + 1]
-        
-        match.player_a = p1
-        match.player_b = p2
-        
-        if not p1 or not p2:
-            if not p1 and not p2:
-                match.status = 'cancelled'
+        for pd_item in group_players:
+            player, _ = Player.objects.get_or_create(name=pd_item['name'])
+            if category_obj:
+                CategoryPlayer.objects.get_or_create(category=category_obj, player=player)
+                
+            player_objs.append(player)
+            if pd_item['is_seed']:
+                seeded_players.append(player)
             else:
-                match.status = 'completed'
-                match.winner = p1 if p1 else p2
-                if match.next_match:
-                    nm = match.next_match
-                    if match.position_in_bracket % 2 != 0:
-                        nm.player_a = match.winner
-                    else:
-                        nm.player_b = match.winner
-                    nm.save()
-        match.save()
+                unseeded_players.append(player)
+                
+        # Randomize unseeded
+        random.shuffle(unseeded_players)
         
-    return True, f"Torneio Eliminatório gerado com sucesso! Dividido em {num_brackets} chave(s) para {len(player_objs)} atletas.", []
+        num_players = len(player_objs)
+        bracket_size = 2 ** math.ceil(math.log2(max(2, num_players)))
+        
+        # Pad players to power of 2
+        padded_players = seeded_players + unseeded_players
+        while len(padded_players) < bracket_size:
+            padded_players.append(None)
+            
+        seed_pattern = get_seed_order(bracket_size)
+        
+        slots = [None] * bracket_size
+        for i, rank in enumerate(seed_pattern):
+            slots[i] = padded_players[rank - 1]
+            
+        def get_phase_name(round_num, total_rounds):
+            rounds_left = total_rounds - round_num
+            
+            if rounds_left == 0: return "Final"
+            if rounds_left == 1: return "Semifinal"
+            if rounds_left == 2: return "Quartas de Final"
+            if rounds_left == 3: return "Oitavas de Final"
+            
+            if num_brackets == 1:
+                if rounds_left == 4: return "Dezesseis-avos"
+                if rounds_left == 5: return "Trinta-e-dois-avos"
+                
+            return f"{round_num}ª Rodada"
+            
+        def build_tree(round_num, max_rounds, match_pos, next_m):
+            m = Match.objects.create(
+                tournament=tournament,
+                category=category_obj,
+                round_number=round_num,
+                phase=get_phase_name(round_num, max_rounds),
+                next_match=next_m,
+                position_in_bracket=match_pos
+            )
+            if round_num > 1:
+                build_tree(round_num - 1, max_rounds, match_pos * 2 - 1, m)
+                build_tree(round_num - 1, max_rounds, match_pos * 2, m)
+            return m
+            
+        num_rounds = int(math.log2(bracket_size))
+        build_tree(num_rounds, num_rounds, 1, None)
+        
+        r1_matches = Match.objects.filter(tournament=tournament, category=category_obj, round_number=1).order_by('position_in_bracket')
+        
+        for i, match in enumerate(r1_matches):
+            p1 = slots[i*2]
+            p2 = slots[i*2 + 1]
+            
+            match.player_a = p1
+            match.player_b = p2
+            
+            if not p1 or not p2:
+                if not p1 and not p2:
+                    match.status = 'cancelled'
+                else:
+                    match.status = 'completed'
+                    match.winner = p1 if p1 else p2
+                    if match.next_match:
+                        nm = match.next_match
+                        if match.position_in_bracket % 2 != 0:
+                            nm.player_a = match.winner
+                        else:
+                            nm.player_b = match.winner
+                        nm.save()
+            match.save()
+            
+    return True, f"Torneio Eliminatório gerado com sucesso! Processado em {len(groups)} grupos/categorias com {len(players_data)} atletas no total.", []
