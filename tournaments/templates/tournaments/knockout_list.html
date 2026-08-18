@@ -1,8 +1,24 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block logo_text %}TC22A<span>.</span>Torneio{% endblock %}
 
 {% block content %}
+<style>
+@keyframes spin-bolinha {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.bolinha-spin {
+    animation: spin-bolinha 2s linear infinite;
+}
+.bolinha-icon {
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+</style>
 <h1 class="home-title" style="font-size: 2.3rem; margin-bottom: 0.5rem;">Bem-vindo aos Torneios de Tenis do Clube 22 de
     Agosto</h1>
 <p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe as chaves e resultados das
@@ -12,9 +28,9 @@
     {% for tournament in tournaments %}
     <div class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
         {% if tournament.is_finished %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Encerrado</span>
+        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
         {% else %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Em andamento - Rodada Atual {{ tournament.current_round }}</span>
+        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada Atual {{ tournament.current_round }}</span>
         {% endif %}
         <h3 style="margin-top: 0;">{{ tournament.name }}</h3>
         {% if tournament.start_date and tournament.end_date %}
