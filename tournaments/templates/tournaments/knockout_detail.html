@@ -32,30 +32,34 @@
     .round-header {
         text-align: center;
         font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--primary-color);
+        font-weight: 700;
+        color: var(--primary);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
         margin-bottom: 1rem;
         background: var(--bg-card);
-        padding: 0.5rem;
+        padding: 0.6rem;
         border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 210, 255, 0.1);
     }
 
     .matchup {
         background: var(--bg-card);
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
         overflow: hidden;
         position: relative;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        backdrop-filter: blur(10px);
     }
 
     .matchup:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(var(--primary-color-rgb, 59, 130, 246), 0.2);
+        box-shadow: 0 6px 16px rgba(0, 210, 255, 0.2);
+        border-color: rgba(0, 210, 255, 0.3);
     }
 
     .matchup-wrapper {
@@ -126,11 +130,11 @@
 
     .team.winner {
         font-weight: bold;
-        background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.05);
+        background: rgba(0, 210, 255, 0.05);
     }
     
     .team.winner .team-name {
-        color: var(--success, #10b981);
+        color: var(--primary);
     }
 
     .team.winner::before {
@@ -140,7 +144,7 @@
         top: 0;
         bottom: 0;
         width: 4px;
-        background: var(--success, #10b981);
+        background: var(--primary);
     }
 
     .team-name {
@@ -269,25 +273,25 @@
 <div class="print-cover" style="margin-bottom: 2rem; position: relative;">
     <a href="{% url 'tournaments:knockout_list' %}" class="back-link">&larr; Voltar para Torneios</a>
     
-    <button onclick="window.open(window.location.pathname + '?print=true', '_blank')" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+    <button onclick="window.open(window.location.pathname + '?print=true', '_blank')" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-gradient); color: #050B14; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s; box-shadow: 0 0 10px rgba(0,210,255,0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
         Gerar PDF
     </button>
 
-    <h1 class="home-title" style="margin-top: 1rem; padding-right: 120px;">{{ tournament.name }}</h1>
-    <p class="home-subtitle" style="color: var(--text-muted);">
+    <h1 class="home-title" style="margin-top: 1rem; padding-right: 120px; font-size: 2.2rem; margin-bottom: 0.25rem;">{{ tournament.name }}</h1>
+    <p class="home-subtitle" style="margin-bottom: 0;">
         Chave Eliminatória &bull; {{ tournament.get_competition_type_display }} &bull; {{ tournament.get_set_format_display }}
     </p>
 </div>
 
 {% if not brackets %}
-<div class="card" style="text-align: center; padding: 3rem;">
-    <p style="color: var(--text-muted);">A chave deste torneio ainda não foi gerada.</p>
+<div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+    <p style="color: var(--text-muted); font-size: 1.1rem;">A chave deste torneio ainda não foi gerada.</p>
 </div>
 {% else %}
     {% for bracket in brackets %}
         {% if brackets|length > 1 %}
-            <h2 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary-color); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
+            <h2 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
         {% endif %}
         <div class="bracket-container">
             {% for round_num, matches in bracket.rounds.items %}
@@ -298,7 +302,7 @@
                 {% for match in matches %}
                 <div class="matchup-wrapper">
                     {% if match.bracket_label %}
-                        <div style="text-align: left; color: var(--primary-color); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.3rem; margin-left: 0.5rem;">
+                        <div style="text-align: left; color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary); padding-bottom: 0.3rem; margin-left: 0.5rem;">
                             {{ match.bracket_label }}
                         </div>
                     {% endif %}
@@ -324,7 +328,7 @@
                                 {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
                             {% elif match.status == 'completed' and match.sets_a != None %}
                                 <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_a }}</span>
-                            {% elif match.status == 'completed' and match.winner == match.player_a %}
+                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_a and not match.is_bye and match.player_b and match.player_b.name|lower != 'bye' and match.player_b.name|lower != 'folga' %}
                                 <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
                             {% endif %}
                         </span>
@@ -341,7 +345,7 @@
                                 {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
                             {% elif match.status == 'completed' and match.sets_b != None %}
                                 <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_b }}</span>
-                            {% elif match.status == 'completed' and match.winner == match.player_b %}
+                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_b and not match.is_bye and match.player_a and match.player_a.name|lower != 'bye' and match.player_a.name|lower != 'folga' %}
                                 <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
                             {% endif %}
                         </span>

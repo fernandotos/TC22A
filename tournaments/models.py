@@ -2,6 +2,31 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+class SiteConfiguration(models.Model):
+    background_color = models.CharField(max_length=20, default="#050B14", verbose_name="Cor de Fundo Principal", help_text="Ex: #050B14")
+    primary_color = models.CharField(max_length=20, default="#00d2ff", verbose_name="Cor Principal (Destaque)", help_text="Ex: #00d2ff")
+    title_color = models.CharField(max_length=20, default="#FFFFFF", verbose_name="Cor do Título", help_text="Cor do título principal nas páginas")
+    subtitle_color = models.CharField(max_length=20, default="#94A3B8", verbose_name="Cor do Subtítulo", help_text="Cor do texto abaixo do título principal")
+    overlay_color = models.CharField(max_length=20, default="#000000", verbose_name="Cor da Camada Fumê (Overlay)", help_text="Cor da camada que fica por cima da imagem de fundo")
+    overlay_opacity = models.IntegerField(default=60, verbose_name="Opacidade do Fumê (%)", help_text="0 (Totalmente transparente) a 100 (Totalmente sólido)")
+    background_image = models.ImageField(upload_to="backgrounds/", null=True, blank=True, verbose_name="Imagem de Fundo")
+
+    class Meta:
+        verbose_name = "Configuração do Site"
+        verbose_name_plural = "Configuração do Site"
+
+    def __str__(self):
+        return "Configuração Visual do Site"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
 class Tournament(models.Model):
     TOURNAMENT_TYPES = [
         ('ranking', 'Ranking'),
@@ -298,10 +323,11 @@ def update_rankings(sender, instance, created, **kwargs):
         elif (instance.sets_b or 0) > (instance.sets_a or 0):
             calculated_winner = instance.player_b
             
-        if instance.winner != calculated_winner:
-            instance.winner = calculated_winner
-            if 'winner' not in fields_to_update:
-                fields_to_update.append('winner')
+        if not instance.is_bye:
+            if instance.winner != calculated_winner:
+                instance.winner = calculated_winner
+                if 'winner' not in fields_to_update:
+                    fields_to_update.append('winner')
                 
     elif instance.status == 'pending' and instance.winner is not None:
         instance.winner = None

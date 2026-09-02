@@ -3,10 +3,10 @@
 {% block title %}{{ category.name }} - TC22A{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ category.name }}</h1>
-        <p style="color: var(--text-muted);">Acompanhe os resultados deste Ranking.</p>
+        <h1 class="home-title" style="font-size: 2.2rem; margin-bottom: 0.25rem;">{{ category.name }}</h1>
+        <p class="home-subtitle" style="margin-bottom: 0;">Acompanhe os resultados deste Ranking.</p>
     </div>
     <div class="header-actions">
         <a href="{% url 'tournaments:tournament_detail' category.tournament.id %}" class="back-link">&larr; Voltar para
@@ -20,13 +20,15 @@
 </div>
 
 {% if rounds %}
-<div class="filter-section" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
-    <label for="round-filter" style="font-weight: 600; color: var(--text-color);">Filtrar por Rodada:</label>
+<div class="filter-section" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <label for="round-filter" style="font-weight: 600; color: var(--text-muted);">Escolha a rodada que deseja visualizar:</label>
     <select id="round-filter"
-        style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; min-width: 200px;">
-        <option value="all" style="color: #000; background-color: #fff;">Todas as Rodadas</option>
+        style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(15,23,42,0.8); color: var(--text-main); font-family: inherit; min-width: 200px; backdrop-filter: blur(10px); outline: none;">
+        <option value="all" style="background-color: #0F172A;">Todas as Rodadas</option>
         {% for round_num in rounds.keys %}
-        <option value="{{ round_num }}" style="color: #000; background-color: #fff;">Rodada {{ round_num }}</option>
+        <option value="{{ round_num }}" style="background-color: #0F172A;" {% if round_num == category.tournament.current_round %}selected{% endif %}>
+            Rodada {{ round_num }} {% if round_num == category.tournament.current_round %}(Rodada Atual){% endif %}
+        </option>
         {% endfor %}
     </select>
 </div>
@@ -34,7 +36,12 @@
 
 {% for round_num, matches in rounds.items %}
 <div class="round-block" data-round="{{ round_num }}">
-    <h2 class="round-title">Rodada {{ round_num }}</h2>
+    <h2 class="round-title">
+        Rodada {{ round_num }}
+        {% if round_num == category.tournament.current_round %}
+        <span style="font-size: 0.85rem; color: var(--primary); background: rgba(0,210,255,0.1); padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; margin-left: 0.75rem; border: 1px solid rgba(0,210,255,0.2); vertical-align: middle;">Rodada Atual</span>
+        {% endif %}
+    </h2>
 
     <div class="table-container">
         <table>
@@ -58,6 +65,8 @@
                         {% if match.status == 'completed' %}
                             {% if match.sets_a != None and match.sets_b != None %}
                                 {{ match.sets_a }} x {{ match.sets_b }}
+                            {% elif not match.player_a or not match.player_b %}
+                                BYE
                             {% else %}
                                 W.O.
                             {% endif %}
@@ -96,27 +105,33 @@
     </div>
 </div>
 {% empty %}
-<div class="card" style="text-align: center; padding: 3rem;">
-    <p style="color: var(--text-muted);">Nenhum jogo cadastrado para esta categoria.</p>
+<div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+    <p style="color: var(--text-muted); font-size: 1.1rem;">Nenhum jogo cadastrado para esta categoria.</p>
 </div>
 {% endfor %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const filterSelect = document.getElementById('round-filter');
-        if (filterSelect) {
-            filterSelect.addEventListener('change', function () {
-                const selectedRound = this.value;
-                const roundBlocks = document.querySelectorAll('.round-block');
+        
+        function applyFilter() {
+            if (!filterSelect) return;
+            const selectedRound = filterSelect.value;
+            const roundBlocks = document.querySelectorAll('.round-block');
 
-                roundBlocks.forEach(block => {
-                    if (selectedRound === 'all' || block.getAttribute('data-round') === selectedRound) {
-                        block.style.display = 'block';
-                    } else {
-                        block.style.display = 'none';
-                    }
-                });
+            roundBlocks.forEach(block => {
+                if (selectedRound === 'all' || block.getAttribute('data-round') === selectedRound) {
+                    block.style.display = 'block';
+                } else {
+                    block.style.display = 'none';
+                }
             });
+        }
+
+        if (filterSelect) {
+            filterSelect.addEventListener('change', applyFilter);
+            // Aplica o filtro imediatamente ao carregar a página
+            applyFilter();
         }
     });
 </script>

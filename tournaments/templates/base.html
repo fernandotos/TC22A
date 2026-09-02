@@ -9,97 +9,42 @@
     <link rel="icon" type="image/png" href="{% static 'bolinha.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ request.resolver_match.view_name|default:'3' }}">
+    {% if site_config %}
     <style>
-        /* Mobile Overrides (Bypass Cache Total) */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem !important;
-            }
-
-            .header-content {
-                flex-direction: column !important;
-                gap: 1rem !important;
-                align-items: center !important;
-            }
-
-            .header-nav {
-                width: 100% !important;
-                justify-content: center !important;
-                flex-wrap: wrap !important;
-                gap: 0.75rem !important;
-                margin-top: 0.5rem !important;
-            }
-
-            .nav-divider {
-                display: none !important;
-            }
-
-            .nav-link {
-                font-size: 0.9rem !important;
-                padding: 0.4rem 1rem !important;
-                background: rgba(255, 255, 255, 0.05) !important;
-                border-radius: 8px !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                text-align: center !important;
-                display: inline-block !important;
-            }
-
-            .card-grid {
-                grid-template-columns: 1fr !important;
-            }
-
-            .home-title {
-                font-size: 1.75rem !important;
-                text-align: center !important;
-            }
-
-            .home-subtitle {
-                text-align: center !important;
-                margin-bottom: 1.5rem !important;
-            }
-
-            .banner-card {
-                padding: 1.5rem !important;
-            }
-
-            .banner-card h2 {
-                font-size: 1.4rem !important;
-            }
-
-            .banner-card p {
-                font-size: 0.95rem !important;
-            }
-
-            .banner-card div {
-                font-size: 0.9rem !important;
-                padding: 0.75rem !important;
-            }
-
-            th,
-            td {
-                padding: 0.5rem 0.75rem !important;
-                font-size: 0.8rem !important;
-            }
-
-            .table-container {
-                overflow-x: auto !important;
-            }
-
-            .tabs {
-                flex-wrap: wrap !important;
-                gap: 0.5rem !important;
-            }
-
-            .tab {
-                flex: 1 !important;
-                text-align: center !important;
-                padding: 0.5rem !important;
-                font-size: 0.9rem !important;
-            }
+        :root {
+            {% if site_config.background_color %}--bg-main: {{ site_config.background_color }};{% endif %}
+            {% if site_config.primary_color %}
+            --primary: {{ site_config.primary_color }};
+            --primary-gradient: linear-gradient(135deg, {{ site_config.primary_color }} 0%, #3a7bd5 100%);
+            {% endif %}
         }
+        {% if site_config.background_image %}
+        body {
+            background-image: linear-gradient(
+                color-mix(in srgb, {{ site_config.overlay_color|default:'#000000' }} {{ site_config.overlay_opacity|default:'60' }}%, transparent), 
+                color-mix(in srgb, {{ site_config.overlay_color|default:'#000000' }} {{ site_config.overlay_opacity|default:'60' }}%, transparent)
+            ), url("{{ site_config.background_image.url }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        {% endif %}
+        {% if site_config.title_color %}
+        h1.home-title {
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            color: {{ site_config.title_color }} !important;
+        }
+        {% endif %}
+        {% if site_config.subtitle_color %}
+        p.home-subtitle {
+            color: {{ site_config.subtitle_color }} !important;
+        }
+        {% endif %}
     </style>
+    {% endif %}
 </head>
 
 <body>

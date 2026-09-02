@@ -6,8 +6,33 @@ from django import forms
 from django.urls import path
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import Tournament, RankingTournament, KnockoutTournament, Category, Player, CategoryPlayer, Match
+from .models import Tournament, RankingTournament, KnockoutTournament, Category, Player, CategoryPlayer, Match, SiteConfiguration
 from .services import process_excel_tournament, process_excel_knockout
+
+class ColorPickerWidget(forms.TextInput):
+    input_type = 'color'
+
+class SiteConfigurationForm(forms.ModelForm):
+    class Meta:
+        model = SiteConfiguration
+        fields = '__all__'
+        widgets = {
+            'background_color': ColorPickerWidget(attrs={'style': 'width: 100px; height: 40px; padding: 0; cursor: pointer;'}),
+            'primary_color': ColorPickerWidget(attrs={'style': 'width: 100px; height: 40px; padding: 0; cursor: pointer;'}),
+            'title_color': ColorPickerWidget(attrs={'style': 'width: 100px; height: 40px; padding: 0; cursor: pointer;'}),
+            'subtitle_color': ColorPickerWidget(attrs={'style': 'width: 100px; height: 40px; padding: 0; cursor: pointer;'}),
+            'overlay_color': ColorPickerWidget(attrs={'style': 'width: 100px; height: 40px; padding: 0; cursor: pointer;'}),
+            'overlay_opacity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'max': '100', 'style': 'width: 100px;'}),
+        }
+
+@admin.register(SiteConfiguration)
+class SiteConfigurationAdmin(admin.ModelAdmin):
+    form = SiteConfigurationForm
+
+    def has_add_permission(self, request):
+        if self.model.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):

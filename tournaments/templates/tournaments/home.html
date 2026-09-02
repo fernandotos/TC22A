@@ -17,32 +17,34 @@
     margin-bottom: 2px;
 }
 </style>
-<h1 class="home-title" style="font-size: 2.3rem; margin-bottom: 0.5rem;">Bem-vindo ao Ranking interno de Tenis do Clube
+<h1 class="home-title">Bem-vindo ao Ranking interno de Tenis do Clube
     22 de Agosto</h1>
-<p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe os resultados e o ranking do
+<p class="home-subtitle">Acompanhe os resultados e o ranking do
     TC22A.</p>
 
 <div class="card-grid">
     {% for tournament in tournaments %}
-    <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
-        {% if tournament.is_finished %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
-        {% else %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada Atual {{ tournament.current_round }}</span>
-        {% endif %}
-        <h3 style="margin-top: 0;">{{ tournament.name }}</h3>
+    <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="card">
+        <div>
+            {% if tournament.is_finished %}
+            <span class="badge badge-completed"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
+            {% else %}
+            <span class="badge badge-active"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada {{ tournament.current_round }}</span>
+            {% endif %}
+        </div>
+        <h3>{{ tournament.name }}</h3>
         {% if tournament.start_date and tournament.end_date %}
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+        <p class="card-date">
             {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
         </p>
         {% endif %}
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
-            Ver Ranking &rarr;
-        </p>
+        <div style="margin-top: 1rem; color: var(--primary); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+            Ver Ranking <span style="font-size: 1.2rem;">&rarr;</span>
+        </div>
     </a>
     {% empty %}
-    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <p style="color: var(--text-muted);">Nenhum Ranking ativo no momento.</p>
+    <div class="card" style="grid-column: 1 / -1; text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Nenhum Ranking ativo no momento.</p>
     </div>
     {% endfor %}
 </div>

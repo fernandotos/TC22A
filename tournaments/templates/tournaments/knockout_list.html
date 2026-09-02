@@ -19,37 +19,39 @@
     margin-bottom: 2px;
 }
 </style>
-<h1 class="home-title" style="font-size: 2.3rem; margin-bottom: 0.5rem;">Bem-vindo aos Torneios de Tenis do Clube 22 de
+<h1 class="home-title">Bem-vindo aos Torneios de Tenis do Clube 22 de
     Agosto</h1>
-<p class="home-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Acompanhe as chaves e resultados das
+<p class="home-subtitle">Acompanhe as chaves e resultados das
     competições no formato mata-mata.</p>
 
 <div class="card-grid">
     {% for tournament in tournaments %}
-    <div class="card" {% if tournament.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
-        {% if tournament.is_finished %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: var(--success); color: white; font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
-        {% else %}
-        <span style="display: inline-block; padding: 0.2rem 0.5rem; background-color: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.65rem; font-weight: bold; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada Atual {{ tournament.current_round }}</span>
-        {% endif %}
-        <h3 style="margin-top: 0;">{{ tournament.name }}</h3>
+    <div class="card">
+        <div>
+            {% if tournament.is_finished %}
+            <span class="badge badge-completed"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
+            {% else %}
+            <span class="badge badge-active"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada {{ tournament.current_round }}</span>
+            {% endif %}
+        </div>
+        <h3>{{ tournament.name }}</h3>
         {% if tournament.start_date and tournament.end_date %}
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+        <p class="card-date" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
             {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
         </p>
         {% endif %}
         <div style="display: flex; gap: 10px; margin-top: auto;">
-            <a href="{% url 'tournaments:knockout_detail' tournament.id %}" style="flex: 1; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.875rem;">
+            <a href="{% url 'tournaments:knockout_detail' tournament.id %}" style="flex: 1; text-align: center; background: rgba(0, 210, 255, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(0, 210, 255, 0.2); transition: all 0.2s;">
                 Ver Chave &rarr;
             </a>
-            <a href="{% url 'tournaments:tournament_schedule_pdf' tournament.id %}" target="_blank" style="flex: 1; text-align: center; background: #c0392b; color: white; padding: 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.875rem; font-weight: bold;">
+            <a href="{% url 'tournaments:tournament_schedule_pdf' tournament.id %}" target="_blank" style="flex: 1; text-align: center; background: var(--danger-bg); color: var(--danger); padding: 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(239, 68, 68, 0.2); transition: all 0.2s;">
                 📄 Chamada PDF
             </a>
         </div>
     </div>
     {% empty %}
-    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <p style="color: var(--text-muted);">Nenhum Torneio Eliminatório ativo no momento.</p>
+    <div class="card" style="grid-column: 1 / -1; text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Nenhum Torneio Eliminatório ativo no momento.</p>
     </div>
     {% endfor %}
 </div>

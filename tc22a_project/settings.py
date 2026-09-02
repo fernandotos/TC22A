@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'tournaments.context_processors.site_config',
             ],
         },
     },
@@ -122,3 +123,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Ele junta todos os CSS, imagens e PDFs de todas as pastas em um lugar só (nesta pasta "staticfiles") 
 # para o PythonAnywhere conseguir servir eles rápido na internet.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (Uploads)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
