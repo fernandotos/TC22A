@@ -47,10 +47,10 @@
         /* Marca d'água do Tenista */
         .bg-watermark {
             position: fixed;
-            bottom: -20px;
-            right: -20px;
+            bottom: {{ site_config.watermark_bottom|default:-20 }}px;
+            right: {{ site_config.watermark_right|default:-20 }}px;
             width: {{ site_config.watermark_size|default:450 }}px;
-            opacity: 0.{{ site_config.watermark_opacity|default:15|stringformat:"02d" }};
+            opacity: {{ site_config.watermark_opacity|default:15 }}%;
             z-index: 0;
             pointer-events: none;
             mix-blend-mode: screen;
@@ -61,8 +61,8 @@
         @media (max-width: 768px) {
             .bg-watermark {
                 width: calc({{ site_config.watermark_size|default:450 }}px * 0.66);
-                bottom: -10px;
-                right: -10px;
+                bottom: calc({{ site_config.watermark_bottom|default:-20 }}px + 10px);
+                right: calc({{ site_config.watermark_right|default:-20 }}px + 10px);
             }
         }
         {% endif %}
