@@ -43,33 +43,37 @@
             color: {{ site_config.subtitle_color }} !important;
         }
         {% endif %}
+        {% if site_config.watermark_image %}
         /* Marca d'água do Tenista */
-    .bg-watermark {
-        position: fixed;
-        bottom: -20px;
-        right: -20px;
-        width: 450px;
-        opacity: 0.15;
-        z-index: 0;
-        pointer-events: none;
-        mix-blend-mode: screen;
-        transform: rotate(-5deg);
-        filter: grayscale(100%);
-    }
-
-    @media (max-width: 768px) {
         .bg-watermark {
-            width: 300px;
-            bottom: -10px;
-            right: -10px;
+            position: fixed;
+            bottom: -20px;
+            right: -20px;
+            width: {{ site_config.watermark_size|default:450 }}px;
+            opacity: 0.{{ site_config.watermark_opacity|default:15|stringformat:"02d" }};
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            transform: rotate(-5deg);
+            filter: grayscale(100%);
         }
-    }
+
+        @media (max-width: 768px) {
+            .bg-watermark {
+                width: calc({{ site_config.watermark_size|default:450 }}px * 0.66);
+                bottom: -10px;
+                right: -10px;
+            }
+        }
+        {% endif %}
 </style>
     {% endif %}
 </head>
 
 <body>
-    <img src="{% static 'tennis_player.png' %}" class="bg-watermark" alt="Tenista Marca d'água">
+    {% if site_config and site_config.watermark_image %}
+    <img src="{{ site_config.watermark_image.url }}" class="bg-watermark" alt="Marca d'água">
+    {% endif %}
     <header>
         <div class="container header-content">
             <a href="{% url 'tournaments:home' %}" class="logo">{% block logo_text %}TC22A<span>.</span>Ranking{% endblock %}</a>

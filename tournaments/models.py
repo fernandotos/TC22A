@@ -10,6 +10,10 @@ class SiteConfiguration(models.Model):
     overlay_color = models.CharField(max_length=20, default="#000000", verbose_name="Cor da Camada Fumê (Overlay)", help_text="Cor da camada que fica por cima da imagem de fundo")
     overlay_opacity = models.IntegerField(default=60, verbose_name="Opacidade do Fumê (%)", help_text="0 (Totalmente transparente) a 100 (Totalmente sólido)")
     background_image = models.ImageField(upload_to="backgrounds/", null=True, blank=True, verbose_name="Imagem de Fundo")
+    
+    watermark_image = models.ImageField(upload_to="backgrounds/", null=True, blank=True, verbose_name="Imagem de Marca d'Água", help_text="Imagem para ficar no canto inferior direito")
+    watermark_size = models.IntegerField(default=450, verbose_name="Tamanho da Marca d'Água (px)", help_text="Tamanho em pixels (padrão: 450)")
+    watermark_opacity = models.IntegerField(default=15, verbose_name="Opacidade da Marca d'Água (%)", help_text="0 (Invisível) a 100 (Totalmente opaca, padrão: 15)")
 
     class Meta:
         verbose_name = "Configuração do Site"
