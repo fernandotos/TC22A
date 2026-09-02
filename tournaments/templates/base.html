@@ -43,7 +43,28 @@
             color: {{ site_config.subtitle_color }} !important;
         }
         {% endif %}
-    </style>
+        /* Marca d'água do Tenista */
+    .bg-watermark {
+        position: fixed;
+        bottom: -20px;
+        right: -20px;
+        width: 450px;
+        opacity: 0.15;
+        z-index: 0;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        transform: rotate(-5deg);
+        filter: grayscale(100%);
+    }
+
+    @media (max-width: 768px) {
+        .bg-watermark {
+            width: 300px;
+            bottom: -10px;
+            right: -10px;
+        }
+    }
+</style>
     {% endif %}
 </head>
 
