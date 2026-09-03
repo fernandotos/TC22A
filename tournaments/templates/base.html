@@ -54,7 +54,7 @@
             z-index: 0;
             pointer-events: none;
             mix-blend-mode: screen;
-            transform: rotate(-5deg);
+            transform: rotate({{ site_config.watermark_rotation|default:-5 }}deg);
             filter: grayscale(100%);
         }
 

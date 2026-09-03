@@ -16,6 +16,7 @@ class SiteConfiguration(models.Model):
     watermark_opacity = models.IntegerField(default=15, verbose_name="Opacidade da Marca d'Água (%)", help_text="0 (Invisível) a 100 (Totalmente opaca, padrão: 15)")
     watermark_bottom = models.IntegerField(default=-20, verbose_name="Posição Vertical (px)", help_text="Distância do fundo da tela. Use números negativos (ex: -50) para empurrar a imagem mais para baixo caso os pés estejam 'voando'.")
     watermark_right = models.IntegerField(default=-20, verbose_name="Posição Horizontal (px)", help_text="Distância da direita. Use números negativos para empurrar mais para a direita.")
+    watermark_rotation = models.IntegerField(default=-5, verbose_name="Rotação (graus)", help_text="Giro da imagem. Padrão: -5. Zero para deixar reto.")
 
     class Meta:
         verbose_name = "Configuração do Site"
