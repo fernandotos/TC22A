@@ -109,6 +109,28 @@
             <p>&copy; {% now "Y" %} Tenis Clube 22 de Agosto. Desenvolvido para gerenciar a emoção do esporte.</p>
         </div>
     </footer>
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-banner-text">
+            <strong>Privacidade e Cookies:</strong> Nós utilizamos cookies (como o Google Analytics) para analisar o tráfego e melhorar sua experiência. Ao continuar navegando, você concorda com o uso de cookies.
+        </div>
+        <button id="accept-cookies" class="cookie-banner-btn">Entendi</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!localStorage.getItem("cookie_consent_tc22a")) {
+                setTimeout(function() {
+                    document.getElementById("cookie-banner").classList.add("show");
+                }, 1000); // Aparece 1 segundo após carregar
+            }
+
+            document.getElementById("accept-cookies").addEventListener("click", function() {
+                localStorage.setItem("cookie_consent_tc22a", "true");
+                document.getElementById("cookie-banner").classList.remove("show");
+            });
+        });
+    </script>
 </body>
 
 </html>
